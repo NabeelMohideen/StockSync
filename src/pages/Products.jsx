@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Package, Search, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AccessControl from "@/components/AccessControl";
 
 export default function Products() {
   const [isOpen, setIsOpen] = useState(false);
@@ -103,7 +104,8 @@ export default function Products() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <AccessControl allowedLevels={['super_admin', 'administrator']}>
+      <div className="min-h-screen bg-slate-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -257,5 +259,6 @@ export default function Products() {
         </div>
       </div>
     </div>
+    </AccessControl>
   );
 }

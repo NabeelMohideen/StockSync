@@ -20,6 +20,19 @@ export default function POS() {
 
   const queryClient = useQueryClient();
 
+  // Get current user to check if they're assigned to a shop
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  // Auto-select shop for sales persons
+  useEffect(() => {
+    if (currentUser?.access_level === 'sales_person' && currentUser?.assigned_shop_id) {
+      setSelectedShop(currentUser.assigned_shop_id);
+    }
+  }, [currentUser]);
+
   const { data: shops = [] } = useQuery({
     queryKey: ['shops'],
     queryFn: () => base44.entities.Shop.list()
@@ -152,21 +165,30 @@ export default function POS() {
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
-              <Store className="w-5 h-5 text-slate-600" />
-              <Select value={selectedShop} onValueChange={setSelectedShop}>
-                <SelectTrigger className="w-64 border-0 bg-transparent focus:ring-0">
-                  <SelectValue placeholder="Select Shop" />
-                </SelectTrigger>
-                <SelectContent>
-                  {shops.filter(s => s.is_active !== false).map(shop => (
-                    <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {currentUser?.access_level === 'sales_person' && currentUser?.assigned_shop_id ? (
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
+                <Store className="w-5 h-5 text-slate-600" />
+                <span className="font-medium text-slate-900">
+                  {shops.find(s => s.id === currentUser.assigned_shop_id)?.name || 'Your Shop'}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
+                <Store className="w-5 h-5 text-slate-600" />
+                <Select value={selectedShop} onValueChange={setSelectedShop}>
+                  <SelectTrigger className="w-64 border-0 bg-transparent focus:ring-0">
+                    <SelectValue placeholder="Select Shop" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shops.filter(s => s.is_active !== false).map(shop => (
+                      <SelectItem key={shop.id} value={shop.id}>
+                        {shop.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
       </div>

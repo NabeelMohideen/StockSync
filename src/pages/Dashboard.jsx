@@ -5,6 +5,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import StockAlertCard from "@/components/dashboard/StockAlertCard";
 import RecentSalesTable from "@/components/dashboard/RecentSalesTable";
 import ShopPerformance from "@/components/dashboard/ShopPerformance";
+import AccessControl from "@/components/AccessControl";
 
 export default function Dashboard() {
   const { data: products = [] } = useQuery({
@@ -57,7 +58,8 @@ export default function Dashboard() {
     });
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <AccessControl allowedLevels={['super_admin', 'administrator']}>
+      <div className="min-h-screen bg-slate-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -110,5 +112,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </AccessControl>
   );
 }

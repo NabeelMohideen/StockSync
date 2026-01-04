@@ -9,24 +9,43 @@ import {
   Boxes,
   Menu,
   X,
-  ShoppingCart
+  ShoppingCart,
+  UserCog,
+  BarChart3,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
-const navItems = [
-  { name: "POS", icon: ShoppingCart, page: "POS" },
-  { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
-  { name: "Products", icon: Package, page: "Products" },
-  { name: "Shops", icon: Store, page: "Shops" },
-  { name: "Inventory", icon: Boxes, page: "Inventory" },
-  { name: "Transfers", icon: ArrowRightLeft, page: "StockTransfers" },
-  { name: "Sales", icon: ReceiptText, page: "Sales" },
+const allNavItems = [
+  { name: "POS", icon: ShoppingCart, page: "POS", roles: ['super_admin', 'administrator', 'sales_person'] },
+  { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard", roles: ['super_admin', 'administrator'] },
+  { name: "Products", icon: Package, page: "Products", roles: ['super_admin', 'administrator'] },
+  { name: "Shops", icon: Store, page: "Shops", roles: ['super_admin', 'administrator'] },
+  { name: "Inventory", icon: Boxes, page: "Inventory", roles: ['super_admin', 'administrator'] },
+  { name: "Transfers", icon: ArrowRightLeft, page: "StockTransfers", roles: ['super_admin', 'administrator'] },
+  { name: "Sales", icon: ReceiptText, page: "Sales", roles: ['super_admin', 'administrator'] },
+  { name: "Reports", icon: BarChart3, page: "Reports", roles: ['super_admin', 'administrator', 'report_viewer'] },
+  { name: "Users", icon: UserCog, page: "Users", roles: ['super_admin', 'administrator'] },
 ];
 
 export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const userAccessLevel = currentUser?.access_level || 'sales_person';
+  const navItems = allNavItems.filter(item => item.roles.includes(userAccessLevel));
+
+  const handleLogout = () => {
+    base44.auth.logout();
+  };
 
   return (
     <div className="min-h-screen bg-slate-50/50">
@@ -112,11 +131,24 @@ export default function Layout({ children, currentPageName }) {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
-          <div className="bg-slate-50 rounded-xl p-4">
-            <p className="text-xs text-slate-500 mb-1">Version</p>
-            <p className="text-sm font-medium text-slate-900">1.0.0</p>
-          </div>
+        <div className="p-4 border-t border-slate-100 space-y-3">
+          {currentUser && (
+            <div className="bg-slate-50 rounded-xl p-4">
+              <p className="text-xs text-slate-500 mb-1">Logged in as</p>
+              <p className="text-sm font-medium text-slate-900 truncate">{currentUser.full_name || currentUser.email}</p>
+              <p className="text-xs text-slate-500 mt-1 capitalize">
+                {userAccessLevel.replace('_', ' ')}
+              </p>
+            </div>
+          )}
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
         </div>
       </aside>
 

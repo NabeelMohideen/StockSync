@@ -28,6 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Warehouse, Store, Package, AlertTriangle, Pencil, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AccessControl from "@/components/AccessControl";
 
 export default function Inventory() {
   const [activeTab, setActiveTab] = useState("storage");
@@ -112,7 +113,8 @@ export default function Inventory() {
   const getTotalShopStock = () => shopInventory.reduce((sum, i) => sum + (i.quantity || 0), 0);
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <AccessControl allowedLevels={['super_admin', 'administrator']}>
+      <div className="min-h-screen bg-slate-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">Inventory</h1>
@@ -326,5 +328,6 @@ export default function Inventory() {
         </Dialog>
       </div>
     </div>
+    </AccessControl>
   );
 }

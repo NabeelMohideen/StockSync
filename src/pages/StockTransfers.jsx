@@ -30,6 +30,7 @@ import {
 import { Plus, ArrowRight, Warehouse, Store, CheckCircle2, Clock, Truck, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import AccessControl from "@/components/AccessControl";
 
 const statusConfig = {
   pending: { label: "Pending", icon: Clock, color: "bg-amber-100 text-amber-700" },
@@ -148,7 +149,8 @@ export default function StockTransfers() {
   const getAvailableStock = (productId) => products.find(p => p.id === productId)?.storage_quantity || 0;
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <AccessControl allowedLevels={['super_admin', 'administrator']}>
+      <div className="min-h-screen bg-slate-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -307,5 +309,6 @@ export default function StockTransfers() {
         </div>
       </div>
     </div>
+    </AccessControl>
   );
 }
