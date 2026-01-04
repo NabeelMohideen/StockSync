@@ -8,13 +8,15 @@ import {
   ReceiptText, 
   Boxes,
   Menu,
-  X
+  X,
+  ShoppingCart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
+  { name: "POS", icon: ShoppingCart, page: "POS" },
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
   { name: "Products", icon: Package, page: "Products" },
   { name: "Shops", icon: Store, page: "Shops" },
