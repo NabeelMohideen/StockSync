@@ -37,7 +37,7 @@ export default function CheckoutModal({ isOpen, onClose, onComplete, total }) {
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="bg-slate-50 rounded-xl p-4 text-center">
             <p className="text-sm text-slate-600 mb-1">Total Amount</p>
-            <p className="text-3xl font-bold text-slate-900">${total.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-slate-900">LKR {total.toLocaleString()}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

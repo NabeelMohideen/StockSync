@@ -48,7 +48,7 @@ export default function ShopPerformance({ shops, sales }) {
                   <span className="font-medium text-slate-900 text-sm">{shop.name}</span>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-slate-900 text-sm">${shop.totalSales.toLocaleString()}</p>
+                  <p className="font-semibold text-slate-900 text-sm">LKR {shop.totalSales.toLocaleString()}</p>
                   <p className="text-xs text-slate-400">{shop.saleCount} sales</p>
                 </div>
               </div>

@@ -178,7 +178,7 @@ export default function Users() {
                         <SelectContent>
                           {shops.filter(s => s.is_active !== false).map(shop => (
                             <SelectItem key={shop.id} value={shop.id}>
-                              {shop.name}
+                              {shop.shop_id ? `${shop.shop_id} - ${shop.name}` : shop.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -325,7 +325,7 @@ export default function Users() {
                     <SelectContent>
                       {shops.filter(s => s.is_active !== false).map(shop => (
                         <SelectItem key={shop.id} value={shop.id}>
-                          {shop.name}
+                          {shop.shop_id ? `${shop.shop_id} - ${shop.name}` : shop.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

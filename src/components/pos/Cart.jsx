@@ -4,9 +4,7 @@ import { ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) {
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.1; // 10% tax
-  const total = subtotal + tax;
+  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <Card className="h-full flex flex-col">
@@ -56,7 +54,7 @@ export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) 
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
+                      <span className="w-10 text-center font-medium">{item.quantity}</span>
                       <Button
                         variant="outline"
                         size="icon"
@@ -68,7 +66,7 @@ export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) 
                       </Button>
                     </div>
                     <p className="font-semibold text-slate-900">
-                      ${(item.price * item.quantity).toLocaleString()}
+                      LKR {(item.price * item.quantity).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -77,17 +75,9 @@ export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) 
 
             <div className="border-t border-slate-100 p-4 space-y-3">
               <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Subtotal</span>
-                  <span className="font-medium text-slate-900">${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Tax (10%)</span>
-                  <span className="font-medium text-slate-900">${tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t border-slate-200">
+                <div className="flex justify-between text-lg font-bold">
                   <span className="text-slate-900">Total</span>
-                  <span className="text-slate-900">${total.toFixed(2)}</span>
+                  <span className="text-slate-900">LKR {total.toLocaleString()}</span>
                 </div>
               </div>
               

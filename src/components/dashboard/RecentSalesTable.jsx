@@ -59,7 +59,7 @@ export default function RecentSalesTable({ sales, shops, products }) {
                 <td className="px-6 py-4 text-sm text-slate-600">{getShopName(sale.shop_id)}</td>
                 <td className="px-6 py-4 text-sm text-slate-600">{sale.quantity}</td>
                 <td className="px-6 py-4 text-sm font-semibold text-slate-900 text-right">
-                  ${sale.total_amount?.toLocaleString()}
+                  LKR {sale.total_amount?.toLocaleString()}
                 </td>
               </tr>
             ))}

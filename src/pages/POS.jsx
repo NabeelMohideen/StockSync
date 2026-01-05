@@ -148,9 +148,7 @@ export default function POS() {
     });
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.1;
-  const total = subtotal + tax;
+  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const currentShop = shops.find(s => s.id === selectedShop);
 

@@ -129,7 +129,7 @@ export default function Reports() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-slate-900">${totalRevenue.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-slate-900">LKR {totalRevenue.toLocaleString()}</p>
                 <p className="text-sm text-slate-500 mt-1">{filteredSales.length} transactions</p>
               </CardContent>
             </Card>
@@ -144,7 +144,7 @@ export default function Reports() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-slate-900">${totalProfit.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-slate-900">LKR {totalProfit.toLocaleString()}</p>
                 <p className="text-sm text-emerald-600 mt-1 flex items-center gap-1">
                   <ArrowUpRight className="w-4 h-4" />
                   {profitMargin.toFixed(1)}% margin
@@ -177,7 +177,7 @@ export default function Reports() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-slate-900">${averageOrderValue.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                <p className="text-3xl font-bold text-slate-900">LKR {averageOrderValue.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
                 <p className="text-sm text-slate-500 mt-1">per transaction</p>
               </CardContent>
             </Card>
@@ -202,7 +202,7 @@ export default function Reports() {
                           <p className="text-sm text-slate-500">{shop.salesCount} sales • {shop.units} units</p>
                         </div>
                       </div>
-                      <p className="font-semibold text-slate-900">${shop.revenue.toLocaleString()}</p>
+                      <p className="font-semibold text-slate-900">LKR {shop.revenue.toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -225,7 +225,7 @@ export default function Reports() {
                             {method.replace('_', ' ')}
                           </p>
                           <p className="text-sm font-semibold text-slate-900">
-                            ${amount.toLocaleString()}
+                            LKR {amount.toLocaleString()}
                           </p>
                         </div>
                         <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -262,7 +262,7 @@ export default function Reports() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-900">${product.revenue.toLocaleString()}</p>
+                      <p className="font-semibold text-slate-900">LKR {product.revenue.toLocaleString()}</p>
                       <p className="text-sm text-slate-500">{product.units} units sold</p>
                     </div>
                   </div>

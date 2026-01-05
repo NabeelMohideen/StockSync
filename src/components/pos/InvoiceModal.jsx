@@ -4,9 +4,7 @@ import { CheckCircle, Printer, Download } from "lucide-react";
 import { format } from "date-fns";
 
 export default function InvoiceModal({ isOpen, onClose, sale, items, shopName }) {
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.1;
-  const total = subtotal + tax;
+  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const handlePrint = () => {
     window.print();
@@ -79,9 +77,9 @@ export default function InvoiceModal({ isOpen, onClose, sale, items, shopName })
                         <p className="text-sm text-slate-500">{item.brand}</p>
                       </td>
                       <td className="text-center py-3 text-slate-900">{item.quantity}</td>
-                      <td className="text-right py-3 text-slate-900">${item.price.toLocaleString()}</td>
+                      <td className="text-right py-3 text-slate-900">LKR {item.price.toLocaleString()}</td>
                       <td className="text-right py-3 font-medium text-slate-900">
-                        ${(item.price * item.quantity).toLocaleString()}
+                        LKR {(item.price * item.quantity).toLocaleString()}
                       </td>
                     </tr>
                   ))}
@@ -89,19 +87,11 @@ export default function InvoiceModal({ isOpen, onClose, sale, items, shopName })
               </table>
             </div>
 
-            {/* Totals */}
+            {/* Total */}
             <div className="space-y-2 pt-4">
-              <div className="flex justify-between text-slate-600">
-                <span>Subtotal</span>
-                <span className="font-medium">${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Tax (10%)</span>
-                <span className="font-medium">${tax.toFixed(2)}</span>
-              </div>
               <div className="flex justify-between text-lg font-bold text-slate-900 pt-2 border-t-2 border-slate-200">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>LKR {total.toLocaleString()}</span>
               </div>
             </div>
 
