@@ -42,7 +42,7 @@ const statusConfig = {
 export default function StockTransfers() {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
-    product_id: "", to_location: "", quantity: "", transfer_date: new Date().toISOString().split('T')[0], notes: ""
+    product_id: "", to_location: "", quantity: "", transportation_cost: "", transfer_date: new Date().toISOString().split('T')[0], notes: ""
   });
 
   const queryClient = useQueryClient();
@@ -132,7 +132,7 @@ export default function StockTransfers() {
   });
 
   const resetForm = () => {
-    setFormData({ product_id: "", to_location: "", quantity: "", transfer_date: new Date().toISOString().split('T')[0], notes: "" });
+    setFormData({ product_id: "", to_location: "", quantity: "", transportation_cost: "", transfer_date: new Date().toISOString().split('T')[0], notes: "" });
     setIsOpen(false);
   };
 
@@ -140,7 +140,8 @@ export default function StockTransfers() {
     e.preventDefault();
     createMutation.mutate({
       ...formData,
-      quantity: parseInt(formData.quantity) || 0
+      quantity: parseInt(formData.quantity) || 0,
+      transportation_cost: parseFloat(formData.transportation_cost) || 0
     });
   };
 
@@ -205,9 +206,20 @@ export default function StockTransfers() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Transfer Date</Label>
-                    <Input type="date" value={formData.transfer_date} onChange={(e) => setFormData({...formData, transfer_date: e.target.value})} />
+                    <Label>Transportation Cost (LKR)</Label>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      value={formData.transportation_cost} 
+                      onChange={(e) => setFormData({...formData, transportation_cost: e.target.value})} 
+                      placeholder="0.00"
+                    />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Transfer Date</Label>
+                  <Input type="date" value={formData.transfer_date} onChange={(e) => setFormData({...formData, transfer_date: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label>Notes</Label>
@@ -231,15 +243,16 @@ export default function StockTransfers() {
                 <TableHead className="font-medium">Product</TableHead>
                 <TableHead className="font-medium">Route</TableHead>
                 <TableHead className="font-medium">Quantity</TableHead>
+                <TableHead className="font-medium">Transport Cost</TableHead>
                 <TableHead className="font-medium">Status</TableHead>
                 <TableHead className="font-medium text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-slate-500">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-slate-500">Loading...</TableCell></TableRow>
               ) : transfers.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-slate-500">No transfers yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-slate-500">No transfers yet</TableCell></TableRow>
               ) : (
                 transfers.map((transfer) => {
                   const config = statusConfig[transfer.status] || statusConfig.pending;
@@ -264,6 +277,9 @@ export default function StockTransfers() {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-slate-900">{transfer.quantity}</TableCell>
+                      <TableCell className="text-slate-600">
+                        LKR {(transfer.transportation_cost || 0).toLocaleString()}
+                      </TableCell>
                       <TableCell>
                         <span className={cn("inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full", config.color)}>
                           <StatusIcon className="w-3 h-3" />

@@ -78,12 +78,12 @@ export default function POS() {
           });
         }
       }
-      return sales[0]; // Return first sale for invoice
+      return { sale: sales[0], items }; // Return sale and items for invoice
     },
-    onSuccess: (sale) => {
+    onSuccess: ({ sale, items }) => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['shopInventory'] });
-      setCompletedSale(sale);
+      setCompletedSale({ sale, items });
       setIsCheckoutOpen(false);
       setIsInvoiceOpen(true);
       setCartItems([]);
@@ -282,8 +282,8 @@ export default function POS() {
             setIsInvoiceOpen(false);
             setCompletedSale(null);
           }}
-          sale={completedSale}
-          items={cartItems}
+          sale={completedSale.sale}
+          items={completedSale.items}
           shopName={currentShop?.name || ""}
         />
       )}

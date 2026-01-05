@@ -12,7 +12,8 @@ import {
   ShoppingCart,
   UserCog,
   BarChart3,
-  LogOut
+  LogOut,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -28,6 +29,8 @@ const allNavItems = [
   { name: "Inventory", icon: Boxes, page: "Inventory", roles: ['super_admin', 'administrator'] },
   { name: "Transfers", icon: ArrowRightLeft, page: "StockTransfers", roles: ['super_admin', 'administrator'] },
   { name: "Sales", icon: ReceiptText, page: "Sales", roles: ['super_admin', 'administrator'] },
+  { name: "Customers", icon: UserCog, page: "Customers", roles: ['super_admin', 'administrator'] },
+  { name: "Warranties", icon: Shield, page: "Warranties", roles: ['super_admin', 'administrator'] },
   { name: "Reports", icon: BarChart3, page: "Reports", roles: ['super_admin', 'administrator', 'report_viewer'] },
   { name: "Users", icon: UserCog, page: "Users", roles: ['super_admin', 'administrator'] },
 ];

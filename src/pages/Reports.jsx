@@ -16,6 +16,18 @@ import AccessControl from "@/components/AccessControl";
 
 export default function Reports() {
   const [dateRange, setDateRange] = useState("30"); // days
+  const [currency, setCurrency] = useState("LKR"); // LKR, USD, CNY
+  
+  const exchangeRates = {
+    LKR: 1,
+    USD: 0.0031, // 1 LKR = 0.0031 USD (approximate)
+    CNY: 0.022  // 1 LKR = 0.022 CNY (approximate)
+  };
+  
+  const formatCurrency = (amount) => {
+    const converted = amount * exchangeRates[currency];
+    return `${currency} ${converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
@@ -103,18 +115,30 @@ export default function Reports() {
               <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">Reports</h1>
               <p className="text-slate-500 mt-1">Sales analytics and performance metrics</p>
             </div>
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-48 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-                <SelectItem value="365">Last year</SelectItem>
-                <SelectItem value="all">All time</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-3">
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger className="w-32 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LKR">LKR</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="CNY">CNY</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-48 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Last 7 days</SelectItem>
+                  <SelectItem value="30">Last 30 days</SelectItem>
+                  <SelectItem value="90">Last 90 days</SelectItem>
+                  <SelectItem value="365">Last year</SelectItem>
+                  <SelectItem value="all">All time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Key Metrics */}
@@ -129,7 +153,7 @@ export default function Reports() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-slate-900">LKR {totalRevenue.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-slate-900">{formatCurrency(totalRevenue)}</p>
                 <p className="text-sm text-slate-500 mt-1">{filteredSales.length} transactions</p>
               </CardContent>
             </Card>
@@ -144,7 +168,7 @@ export default function Reports() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-slate-900">LKR {totalProfit.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-slate-900">{formatCurrency(totalProfit)}</p>
                 <p className="text-sm text-emerald-600 mt-1 flex items-center gap-1">
                   <ArrowUpRight className="w-4 h-4" />
                   {profitMargin.toFixed(1)}% margin
@@ -177,7 +201,7 @@ export default function Reports() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-slate-900">LKR {averageOrderValue.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                <p className="text-3xl font-bold text-slate-900">{formatCurrency(averageOrderValue)}</p>
                 <p className="text-sm text-slate-500 mt-1">per transaction</p>
               </CardContent>
             </Card>
@@ -202,7 +226,7 @@ export default function Reports() {
                           <p className="text-sm text-slate-500">{shop.salesCount} sales • {shop.units} units</p>
                         </div>
                       </div>
-                      <p className="font-semibold text-slate-900">LKR {shop.revenue.toLocaleString()}</p>
+                      <p className="font-semibold text-slate-900">{formatCurrency(shop.revenue)}</p>
                     </div>
                   ))}
                 </div>
@@ -225,7 +249,7 @@ export default function Reports() {
                             {method.replace('_', ' ')}
                           </p>
                           <p className="text-sm font-semibold text-slate-900">
-                            LKR {amount.toLocaleString()}
+                            {formatCurrency(amount)}
                           </p>
                         </div>
                         <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -262,7 +286,7 @@ export default function Reports() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-900">LKR {product.revenue.toLocaleString()}</p>
+                      <p className="font-semibold text-slate-900">{formatCurrency(product.revenue)}</p>
                       <p className="text-sm text-slate-500">{product.units} units sold</p>
                     </div>
                   </div>
