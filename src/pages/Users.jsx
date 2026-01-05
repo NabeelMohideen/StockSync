@@ -253,8 +253,18 @@ export default function Users() {
                             {isSuperAdmin ? "Super Admin" : config.label}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-slate-600">
-                          {user.assigned_shop_id ? getShopName(user.assigned_shop_id) : "-"}
+                        <TableCell>
+                          {user.access_level === 'sales_person' ? (
+                            user.assigned_shop_id ? (
+                              <span className="text-slate-900">{getShopName(user.assigned_shop_id)}</span>
+                            ) : (
+                              <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50">
+                                Not Assigned
+                              </Badge>
+                            )
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="capitalize">
@@ -265,10 +275,12 @@ export default function Users() {
                           {!isSuperAdmin && (
                             <Button
                               variant="ghost"
-                              size="icon"
+                              size="sm"
                               onClick={() => handleEdit(user)}
+                              className="text-slate-600 hover:text-slate-900"
                             >
-                              <Pencil className="w-4 h-4 text-slate-500" />
+                              <Pencil className="w-4 h-4 mr-1" />
+                              Edit
                             </Button>
                           )}
                         </TableCell>
