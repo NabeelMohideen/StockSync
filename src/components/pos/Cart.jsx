@@ -7,15 +7,15 @@ export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) 
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="border-b border-slate-100">
+    <Card className="h-full flex flex-col max-h-[calc(100vh-180px)] lg:max-h-none">
+      <CardHeader className="border-b border-slate-100 flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <ShoppingCart className="w-5 h-5" />
           Cart ({items.length})
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
@@ -73,7 +73,7 @@ export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) 
               ))}
             </div>
 
-            <div className="border-t border-slate-100 p-4 space-y-3">
+            <div className="border-t border-slate-100 p-4 space-y-3 flex-shrink-0 bg-white">
               <div className="space-y-2">
                 <div className="flex justify-between text-lg font-bold">
                   <span className="text-slate-900">Total</span>
