@@ -83,7 +83,7 @@ export default function Dashboard() {
           />
           <StatCard 
             title="Total Revenue" 
-            value={`$${totalSalesAmount.toLocaleString()}`}
+            value={`LKR ${totalSalesAmount.toLocaleString()}`}
             subtitle={`${sales.length} orders`}
             icon={DollarSign}
           />

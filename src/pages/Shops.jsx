@@ -21,7 +21,7 @@ export default function Shops() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingShop, setEditingShop] = useState(null);
   const [formData, setFormData] = useState({
-    name: "", location: "", manager: "", phone: "", is_active: true
+    shop_id: "", name: "", location: "", manager: "", phone: "", is_active: true
   });
 
   const queryClient = useQueryClient();
@@ -63,7 +63,7 @@ export default function Shops() {
   });
 
   const resetForm = () => {
-    setFormData({ name: "", location: "", manager: "", phone: "", is_active: true });
+    setFormData({ shop_id: "", name: "", location: "", manager: "", phone: "", is_active: true });
     setEditingShop(null);
     setIsOpen(false);
   };
@@ -79,6 +79,7 @@ export default function Shops() {
 
   const handleEdit = (shop) => {
     setFormData({
+      shop_id: shop.shop_id || "",
       name: shop.name || "",
       location: shop.location || "",
       manager: shop.manager || "",
@@ -117,6 +118,10 @@ export default function Shops() {
                 <DialogTitle>{editingShop ? 'Edit Shop' : 'Add New Shop'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Shop ID *</Label>
+                  <Input value={formData.shop_id} onChange={(e) => setFormData({...formData, shop_id: e.target.value})} placeholder="SHOP001" required />
+                </div>
                 <div className="space-y-2">
                   <Label>Shop Name *</Label>
                   <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
@@ -169,7 +174,14 @@ export default function Shops() {
                           <Store className="w-5 h-5 text-slate-600" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-slate-900">{shop.name}</h3>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-slate-900">{shop.name}</h3>
+                            {shop.shop_id && (
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded">
+                                {shop.shop_id}
+                              </span>
+                            )}
+                          </div>
                           <span className={cn(
                             "text-xs font-medium px-2 py-0.5 rounded-full",
                             shop.is_active !== false ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
@@ -217,7 +229,7 @@ export default function Shops() {
                         <p className="text-xs text-slate-500">Sales</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-lg font-semibold text-slate-900">${(stats.totalSales / 1000).toFixed(1)}k</p>
+                        <p className="text-lg font-semibold text-slate-900">LKR {(stats.totalSales / 1000).toFixed(0)}k</p>
                         <p className="text-xs text-slate-500">Revenue</p>
                       </div>
                     </div>
