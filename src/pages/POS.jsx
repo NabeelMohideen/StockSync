@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Store, Search, X } from "lucide-react";
 import ProductCard from "@/components/pos/ProductCard";
 import Cart from "@/components/pos/Cart";
-import CheckoutModal from "@/components/pos/CheckoutModal";
+import CheckoutModalWithSerial from "@/components/pos/CheckoutModalWithSerial";
 import InvoiceModal from "@/components/pos/InvoiceModal";
 
 export default function POS() {
@@ -70,8 +70,11 @@ export default function POS() {
       // Create sales for each item
       const sales = [];
       const saleDate = new Date().toISOString().split('T')[0];
+      let creditSaleId = null;
       
       for (const item of items) {
+        const serialNumber = saleData.serialNumbers?.[item.id] || "";
+        
         const sale = await base44.entities.Sale.create({
           shop_id: selectedShop,
           product_id: item.id,
@@ -98,7 +101,7 @@ export default function POS() {
           warranty_period_months: 12,
           purchase_date: saleDate,
           warranty_expiry_date: warrantyExpiryDate.toISOString().split('T')[0],
-          serial_number: item.serial_number || "",
+          serial_number: serialNumber,
           status: "active"
         });
 
@@ -112,14 +115,32 @@ export default function POS() {
           });
         }
       }
-      return { sale: sales[0], items }; // Return sale and items for invoice
+
+      // If payment method is credit, create credit sale record
+      if (saleData.payment_method === "credit") {
+        const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const creditSale = await base44.entities.CreditSale.create({
+          sale_id: sales[0].id,
+          customer_name: saleData.customer_name,
+          customer_phone: saleData.customer_phone,
+          total_amount: totalAmount,
+          amount_paid: 0,
+          balance_due: totalAmount,
+          status: "pending",
+          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        });
+        creditSaleId = creditSale.id;
+      }
+
+      return { sale: sales[0], items, customerData: saleData }; // Return sale and items for invoice
     },
-    onSuccess: ({ sale, items }) => {
+    onSuccess: ({ sale, items, customerData }) => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['shopInventory'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['warranties'] });
-      setCompletedSale({ sale, items });
+      queryClient.invalidateQueries({ queryKey: ['creditSales'] });
+      setCompletedSale({ sale, items, customerData });
       setIsCheckoutOpen(false);
       setIsInvoiceOpen(true);
       setCartItems([]);
@@ -303,11 +324,12 @@ export default function POS() {
       )}
 
       {/* Checkout Modal */}
-      <CheckoutModal
+      <CheckoutModalWithSerial
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         onComplete={handleCompleteCheckout}
         total={total}
+        cartItems={cartItems}
       />
 
       {/* Invoice Modal */}
@@ -320,6 +342,7 @@ export default function POS() {
           }}
           sale={completedSale.sale}
           items={completedSale.items}
+          customerData={completedSale.customerData}
           shopName={currentShop?.name || ""}
         />
       )}

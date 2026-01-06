@@ -28,7 +28,7 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
-    name: "", brand: "", sku: "", size: "", price: "", cost: "", storage_quantity: "", min_stock_level: "5", image_url: ""
+    name: "", brand: "", sku: "", serial_number: "", size: "", price: "", cost: "", storage_quantity: "", min_stock_level: "5", image_url: ""
   });
 
   const queryClient = useQueryClient();
@@ -60,7 +60,7 @@ export default function Products() {
   });
 
   const resetForm = () => {
-    setFormData({ name: "", brand: "", sku: "", size: "", price: "", cost: "", storage_quantity: "", min_stock_level: "5", image_url: "" });
+    setFormData({ name: "", brand: "", sku: "", serial_number: "", size: "", price: "", cost: "", storage_quantity: "", min_stock_level: "5", image_url: "" });
     setEditingProduct(null);
     setIsOpen(false);
   };
@@ -86,6 +86,7 @@ export default function Products() {
       name: product.name || "",
       brand: product.brand || "",
       sku: product.sku || "",
+      serial_number: product.serial_number || "",
       size: product.size || "",
       price: product.price?.toString() || "",
       cost: product.cost?.toString() || "",
@@ -139,9 +140,13 @@ export default function Products() {
                     <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>Screen Size</Label>
-                    <Input value={formData.size} onChange={(e) => setFormData({...formData, size: e.target.value})} placeholder='e.g. 55"' />
+                    <Label>Serial Number</Label>
+                    <Input value={formData.serial_number} onChange={(e) => setFormData({...formData, serial_number: e.target.value})} />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Screen Size</Label>
+                  <Input value={formData.size} onChange={(e) => setFormData({...formData, size: e.target.value})} placeholder='e.g. 55"' />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -231,7 +236,7 @@ export default function Products() {
                       </TableCell>
                       <TableCell className="text-slate-600">{product.sku}</TableCell>
                       <TableCell className="text-slate-600">{product.size || '-'}</TableCell>
-                      <TableCell className="font-medium text-slate-900">${product.price?.toLocaleString()}</TableCell>
+                      <TableCell className="font-medium text-slate-900">LKR {product.price?.toLocaleString()}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {isLowStock && <AlertTriangle className="w-4 h-4 text-amber-500" />}

@@ -224,7 +224,7 @@ export default function Sales() {
                   <div className="bg-slate-50 rounded-xl p-4">
                     <p className="text-sm text-slate-600">Total Amount</p>
                     <p className="text-2xl font-semibold text-slate-900">
-                      ${((products.find(p => p.id === formData.product_id)?.price || 0) * (parseInt(formData.quantity) || 1)).toLocaleString()}
+                      LKR {((products.find(p => p.id === formData.product_id)?.price || 0) * (parseInt(formData.quantity) || 1)).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -305,7 +305,7 @@ export default function Sales() {
                       </TableCell>
                       <TableCell className="text-slate-600">{sale.quantity}</TableCell>
                       <TableCell className="text-right font-semibold text-slate-900">
-                        ${sale.total_amount?.toLocaleString()}
+                        LKR {sale.total_amount?.toLocaleString()}
                       </TableCell>
                     </TableRow>
                   );

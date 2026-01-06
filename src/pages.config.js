@@ -9,6 +9,7 @@ import Shops from './pages/Shops';
 import StockTransfers from './pages/StockTransfers';
 import Users from './pages/Users';
 import Warranties from './pages/Warranties';
+import Accounts from './pages/Accounts';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "StockTransfers": StockTransfers,
     "Users": Users,
     "Warranties": Warranties,
+    "Accounts": Accounts,
 }
 
 export const pagesConfig = {

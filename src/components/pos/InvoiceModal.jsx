@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Printer, Download } from "lucide-react";
 import { format } from "date-fns";
 
-export default function InvoiceModal({ isOpen, onClose, sale, items, shopName }) {
+export default function InvoiceModal({ isOpen, onClose, sale, items, customerData, shopName }) {
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const handlePrint = () => {
@@ -44,9 +44,15 @@ export default function InvoiceModal({ isOpen, onClose, sale, items, shopName })
             <div className="grid grid-cols-2 gap-6 pb-6 border-b border-slate-200">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 mb-2">BILL TO</h3>
-                <p className="font-medium text-slate-900">{sale.customer_name}</p>
-                {sale.customer_phone && (
-                  <p className="text-sm text-slate-600">{sale.customer_phone}</p>
+                <p className="font-medium text-slate-900">{customerData?.customer_name || sale.customer_name}</p>
+                {(customerData?.customer_phone || sale.customer_phone) && (
+                  <p className="text-sm text-slate-600">{customerData?.customer_phone || sale.customer_phone}</p>
+                )}
+                {customerData?.customer_email && (
+                  <p className="text-sm text-slate-600">{customerData.customer_email}</p>
+                )}
+                {customerData?.customer_address && (
+                  <p className="text-sm text-slate-600 mt-1">{customerData.customer_address}</p>
                 )}
               </div>
               <div>

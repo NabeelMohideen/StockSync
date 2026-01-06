@@ -28,7 +28,7 @@ export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [formData, setFormData] = useState({
-    name: "", phone: "", email: "", address: "", city: "", notes: ""
+    name: "", phone: "", email: "", address: "", notes: ""
   });
 
   const queryClient = useQueryClient();
@@ -55,7 +55,7 @@ export default function Customers() {
   });
 
   const resetForm = () => {
-    setFormData({ name: "", phone: "", email: "", address: "", city: "", notes: "" });
+    setFormData({ name: "", phone: "", email: "", address: "", notes: "" });
     setEditingCustomer(null);
     setIsOpen(false);
   };
@@ -67,7 +67,6 @@ export default function Customers() {
       phone: customer.phone || "",
       email: customer.email || "",
       address: customer.address || "",
-      city: customer.city || "",
       notes: customer.notes || ""
     });
     setIsOpen(true);
@@ -138,13 +137,7 @@ export default function Customers() {
                     <Textarea 
                       value={formData.address} 
                       onChange={(e) => setFormData({...formData, address: e.target.value})} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>City</Label>
-                    <Input 
-                      value={formData.city} 
-                      onChange={(e) => setFormData({...formData, city: e.target.value})} 
+                      rows={3}
                     />
                   </div>
                   <div className="space-y-2">
@@ -186,7 +179,7 @@ export default function Customers() {
                   <TableHead className="font-medium">Name</TableHead>
                   <TableHead className="font-medium">Phone</TableHead>
                   <TableHead className="font-medium">Email</TableHead>
-                  <TableHead className="font-medium">City</TableHead>
+                  <TableHead className="font-medium">Address</TableHead>
                   <TableHead className="font-medium text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -229,10 +222,10 @@ export default function Customers() {
                         )}
                       </TableCell>
                       <TableCell className="text-slate-600">
-                        {customer.city ? (
+                        {customer.address ? (
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4 text-slate-400" />
-                            {customer.city}
+                            <span className="max-w-xs truncate">{customer.address}</span>
                           </div>
                         ) : (
                           <span className="text-slate-400">-</span>
