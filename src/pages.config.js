@@ -1,3 +1,4 @@
+import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import POS from './pages/POS';
@@ -7,12 +8,12 @@ import Sales from './pages/Sales';
 import Shops from './pages/Shops';
 import StockTransfers from './pages/StockTransfers';
 import Users from './pages/Users';
-import Customers from './pages/Customers';
 import Warranties from './pages/Warranties';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "Customers": Customers,
     "Dashboard": Dashboard,
     "Inventory": Inventory,
     "POS": POS,
@@ -22,7 +23,6 @@ export const PAGES = {
     "Shops": Shops,
     "StockTransfers": StockTransfers,
     "Users": Users,
-    "Customers": Customers,
     "Warranties": Warranties,
 }
 

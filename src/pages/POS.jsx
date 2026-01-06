@@ -49,10 +49,28 @@ export default function POS() {
     enabled: !!selectedShop
   });
 
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => base44.entities.Customer.list()
+  });
+
   const createSaleMutation = useMutation({
     mutationFn: async ({ saleData, items }) => {
+      // Check if customer exists, if not create
+      let existingCustomer = customers.find(c => c.phone === saleData.customer_phone);
+      if (!existingCustomer && saleData.customer_phone) {
+        existingCustomer = await base44.entities.Customer.create({
+          name: saleData.customer_name,
+          phone: saleData.customer_phone,
+          email: saleData.customer_email || "",
+          address: saleData.customer_address || ""
+        });
+      }
+
       // Create sales for each item
       const sales = [];
+      const saleDate = new Date().toISOString().split('T')[0];
+      
       for (const item of items) {
         const sale = await base44.entities.Sale.create({
           shop_id: selectedShop,
@@ -63,10 +81,26 @@ export default function POS() {
           customer_name: saleData.customer_name,
           customer_phone: saleData.customer_phone,
           payment_method: saleData.payment_method,
-          sale_date: new Date().toISOString().split('T')[0],
+          sale_date: saleDate,
           notes: saleData.notes
         });
         sales.push(sale);
+
+        // Create warranty for each item
+        const warrantyExpiryDate = new Date();
+        warrantyExpiryDate.setMonth(warrantyExpiryDate.getMonth() + 12);
+        
+        await base44.entities.Warranty.create({
+          sale_id: sale.id,
+          product_id: item.id,
+          customer_name: saleData.customer_name,
+          customer_phone: saleData.customer_phone || "",
+          warranty_period_months: 12,
+          purchase_date: saleDate,
+          warranty_expiry_date: warrantyExpiryDate.toISOString().split('T')[0],
+          serial_number: item.serial_number || "",
+          status: "active"
+        });
 
         // Update shop inventory
         const inventory = shopInventory.find(
@@ -83,6 +117,8 @@ export default function POS() {
     onSuccess: ({ sale, items }) => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['shopInventory'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['warranties'] });
       setCompletedSale({ sale, items });
       setIsCheckoutOpen(false);
       setIsInvoiceOpen(true);
