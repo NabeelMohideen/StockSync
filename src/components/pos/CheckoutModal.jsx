@@ -27,6 +27,7 @@ export default function CheckoutModal({ isOpen, onClose, onComplete, total }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onComplete(formData);
+    setFormData({ customer_name: "", customer_phone: "", customer_email: "", customer_address: "", payment_method: "cash", notes: "" });
   };
 
   return (
@@ -53,11 +54,33 @@ export default function CheckoutModal({ isOpen, onClose, onComplete, total }) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Phone Number</Label>
+              <Label>Phone Number *</Label>
               <Input
+                type="tel"
                 value={formData.customer_phone}
                 onChange={(e) => setFormData({...formData, customer_phone: e.target.value})}
                 placeholder="555-0123"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.customer_email}
+                onChange={(e) => setFormData({...formData, customer_email: e.target.value})}
+                placeholder="john@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Input
+                value={formData.customer_address}
+                onChange={(e) => setFormData({...formData, customer_address: e.target.value})}
+                placeholder="123 Main St"
               />
             </div>
           </div>
