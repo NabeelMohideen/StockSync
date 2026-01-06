@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Shield, CheckCircle2, XCircle, AlertCircle, Pencil } from "lucide-react";
+import { Plus, Search, Shield, CheckCircle2, XCircle, AlertCircle, Pencil, Printer } from "lucide-react";
 import { format, addMonths, isPast, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import AccessControl from "@/components/AccessControl";
@@ -133,6 +133,148 @@ export default function Warranties() {
   };
 
   const getProductName = (id) => products.find(p => p.id === id)?.name || 'Unknown';
+  const getProduct = (id) => products.find(p => p.id === id);
+
+  const handlePrint = (warranty) => {
+    const product = getProduct(warranty.product_id);
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Warranty Certificate</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 40px;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #1e293b;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              margin: 0;
+              color: #1e293b;
+              font-size: 32px;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #64748b;
+            }
+            .content {
+              margin: 30px 0;
+            }
+            .row {
+              display: flex;
+              margin-bottom: 15px;
+              padding: 10px;
+              background: #f8fafc;
+              border-radius: 8px;
+            }
+            .label {
+              font-weight: bold;
+              color: #475569;
+              width: 200px;
+            }
+            .value {
+              color: #1e293b;
+            }
+            .footer {
+              margin-top: 60px;
+              padding-top: 20px;
+              border-top: 2px solid #e2e8f0;
+              text-align: center;
+              color: #64748b;
+              font-size: 14px;
+            }
+            .status {
+              display: inline-block;
+              padding: 4px 12px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 600;
+            }
+            .status.active {
+              background: #d1fae5;
+              color: #065f46;
+            }
+            .status.expired {
+              background: #f1f5f9;
+              color: #475569;
+            }
+            @media print {
+              body { padding: 20px; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>WARRANTY CERTIFICATE</h1>
+            <p>TV Inventory Management System</p>
+          </div>
+          
+          <div class="content">
+            <div class="row">
+              <div class="label">Customer Name:</div>
+              <div class="value">${warranty.customer_name}</div>
+            </div>
+            <div class="row">
+              <div class="label">Customer Phone:</div>
+              <div class="value">${warranty.customer_phone || 'N/A'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Product:</div>
+              <div class="value">${product?.name || 'Unknown'} - ${product?.brand || ''}</div>
+            </div>
+            <div class="row">
+              <div class="label">Serial Number:</div>
+              <div class="value">${warranty.serial_number || 'N/A'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Purchase Date:</div>
+              <div class="value">${warranty.purchase_date ? format(new Date(warranty.purchase_date), 'MMMM d, yyyy') : 'N/A'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Warranty Period:</div>
+              <div class="value">${warranty.warranty_period_months} months</div>
+            </div>
+            <div class="row">
+              <div class="label">Warranty Expiry Date:</div>
+              <div class="value">${warranty.warranty_expiry_date ? format(new Date(warranty.warranty_expiry_date), 'MMMM d, yyyy') : 'N/A'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Status:</div>
+              <div class="value">
+                <span class="status ${warranty.status === 'active' ? 'active' : 'expired'}">${warranty.status?.toUpperCase()}</span>
+              </div>
+            </div>
+            ${warranty.notes ? `
+            <div class="row">
+              <div class="label">Notes:</div>
+              <div class="value">${warranty.notes}</div>
+            </div>
+            ` : ''}
+          </div>
+          
+          <div class="footer">
+            <p>This warranty certificate is valid for the period specified above.</p>
+            <p>Please keep this certificate safe for warranty claims.</p>
+            <p style="margin-top: 20px;">Generated on: ${format(new Date(), 'MMMM d, yyyy')}</p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <button onclick="window.print()" style="padding: 10px 30px; background: #1e293b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">Print Certificate</button>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   const getWarrantyStatus = (warranty) => {
     if (warranty.status === 'claimed') return { label: 'Claimed', icon: AlertCircle, color: 'bg-red-100 text-red-700' };
@@ -329,15 +471,26 @@ export default function Warranties() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(warranty)}
-                            className="text-slate-600 hover:text-slate-900"
-                          >
-                            <Pencil className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handlePrint(warranty)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Printer className="w-4 h-4 mr-1" />
+                              Print
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(warranty)}
+                              className="text-slate-600 hover:text-slate-900"
+                            >
+                              <Pencil className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
