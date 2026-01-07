@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
+import { AlertTriangle } from "lucide-react";
 
-export default function StatCard({ title, value, subtitle, icon: Icon, trend, trendUp, className }) {
+export default function StatCard({ title, value, subtitle, icon: Icon, trend, trendUp, className, alert }) {
   return (
     <div className={cn(
       "bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow",
@@ -12,6 +13,12 @@ export default function StatCard({ title, value, subtitle, icon: Icon, trend, tr
           <p className="text-3xl font-semibold text-slate-900 tracking-tight whitespace-nowrap">{value}</p>
           {subtitle && (
             <p className="text-sm text-slate-400">{subtitle}</p>
+          )}
+          {alert && (
+            <div className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-amber-50 text-amber-600">
+              <AlertTriangle className="w-3 h-3" />
+              {alert}
+            </div>
           )}
           {trend && (
             <div className={cn(
