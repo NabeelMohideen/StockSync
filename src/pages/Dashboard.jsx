@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Package, Store, DollarSign, TrendingUp, Warehouse } from "lucide-react";
+import { Package, Store, DollarSign, TrendingUp, Warehouse, AlertTriangle } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import StockAlertCard from "@/components/dashboard/StockAlertCard";
 import RecentSalesTable from "@/components/dashboard/RecentSalesTable";
@@ -74,12 +74,14 @@ export default function Dashboard() {
             value={totalStorageStock}
             subtitle={`${products.length} products`}
             icon={Warehouse}
+            alert={storageAlerts.length > 0 ? `${storageAlerts.length} low stock items` : null}
           />
           <StatCard 
             title="Shop Stock" 
             value={totalShopStock}
             subtitle={`Across ${shops.length} shops`}
             icon={Store}
+            alert={shopAlerts.length > 0 ? `${shopAlerts.length} low stock alerts` : null}
           />
           <StatCard 
             title="Total Revenue" 
