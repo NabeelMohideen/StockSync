@@ -27,10 +27,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, ReceiptText, Search, CreditCard, Banknote, Building2, Wallet } from "lucide-react";
+import { Plus, ReceiptText, Search, CreditCard, Banknote, Building2, Wallet, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import AccessControl from "@/components/AccessControl";
+import InvoiceModal from "@/components/pos/InvoiceModal";
 
 const paymentIcons = {
   cash: Banknote,
@@ -43,6 +44,8 @@ export default function Sales() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterShop, setFilterShop] = useState("all");
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const [formData, setFormData] = useState({
     shop_id: "", product_id: "", quantity: "1", customer_name: "", customer_phone: "", 
     payment_method: "cash", sale_date: new Date().toISOString().split('T')[0], notes: ""
@@ -136,6 +139,29 @@ export default function Sales() {
     const matchesShop = filterShop === "all" || s.shop_id === filterShop;
     return matchesSearch && matchesShop;
   });
+
+  const handleViewInvoice = (sale) => {
+    const product = products.find(p => p.id === sale.product_id);
+    const items = [{
+      id: product?.id,
+      name: product?.name,
+      brand: product?.brand,
+      price: sale.unit_price,
+      quantity: sale.quantity
+    }];
+    
+    setSelectedSale({ 
+      sale, 
+      items, 
+      customerData: {
+        customer_name: sale.customer_name,
+        customer_phone: sale.customer_phone,
+        customer_email: sale.customer_email,
+        customer_address: sale.customer_address
+      }
+    });
+    setIsInvoiceOpen(true);
+  };
 
   return (
     <AccessControl allowedLevels={['super_admin', 'administrator']}>
@@ -274,13 +300,14 @@ export default function Sales() {
                 <TableHead className="font-medium">Payment</TableHead>
                 <TableHead className="font-medium">Qty</TableHead>
                 <TableHead className="font-medium text-right">Amount</TableHead>
+                <TableHead className="font-medium text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-slate-500">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-slate-500">Loading...</TableCell></TableRow>
               ) : filteredSales.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-slate-500">No sales found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-slate-500">No sales found</TableCell></TableRow>
               ) : (
                 filteredSales.map((sale) => {
                   const PaymentIcon = paymentIcons[sale.payment_method] || Banknote;
@@ -307,6 +334,17 @@ export default function Sales() {
                       <TableCell className="text-right font-semibold text-slate-900">
                         LKR {sale.total_amount?.toLocaleString()}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewInvoice(sale)}
+                          className="text-slate-600 hover:text-slate-900"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Invoice
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })
@@ -314,6 +352,21 @@ export default function Sales() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Invoice Modal */}
+        {selectedSale && (
+          <InvoiceModal
+            isOpen={isInvoiceOpen}
+            onClose={() => {
+              setIsInvoiceOpen(false);
+              setSelectedSale(null);
+            }}
+            sale={selectedSale.sale}
+            items={selectedSale.items}
+            customerData={selectedSale.customerData}
+            shopName={getShopName(selectedSale.sale.shop_id)}
+          />
+        )}
       </div>
     </div>
     </AccessControl>
