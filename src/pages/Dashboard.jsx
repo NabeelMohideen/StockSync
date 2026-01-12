@@ -59,22 +59,23 @@ export default function Dashboard() {
 
   return (
     <AccessControl allowedLevels={['super_admin', 'administrator']}>
-      <div className="min-h-screen bg-slate-50/50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">Dashboard</h1>
-          <p className="text-slate-500 mt-1">Overview of your inventory and sales</p>
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Dashboard</h1>
+          <p className="text-slate-600 text-lg">Welcome back! Here's what's happening with your inventory</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <StatCard 
             title="Storage Stock" 
             value={totalStorageStock}
             subtitle={`${products.length} products`}
             icon={Warehouse}
             alert={storageAlerts.length > 0 ? `${storageAlerts.length} low stock items` : null}
+            className="hover:scale-[1.02] transition-transform"
           />
           <StatCard 
             title="Shop Stock" 
@@ -82,26 +83,31 @@ export default function Dashboard() {
             subtitle={`Across ${shops.length} shops`}
             icon={Store}
             alert={shopAlerts.length > 0 ? `${shopAlerts.length} low stock alerts` : null}
+            className="hover:scale-[1.02] transition-transform"
           />
           <StatCard 
             title="Total Revenue" 
             value={`LKR ${totalSalesAmount.toLocaleString()}`}
             subtitle={`${sales.length} orders`}
             icon={DollarSign}
+            className="hover:scale-[1.02] transition-transform"
           />
           <StatCard 
             title="Units Sold" 
             value={totalUnitsSold}
             subtitle="Total TVs sold"
             icon={TrendingUp}
+            className="hover:scale-[1.02] transition-transform"
           />
         </div>
 
         {/* Alerts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <StockAlertCard alerts={storageAlerts} type="storage" />
-          <StockAlertCard alerts={shopAlerts} type="shop" />
-        </div>
+        {(storageAlerts.length > 0 || shopAlerts.length > 0) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            <StockAlertCard alerts={storageAlerts} type="storage" />
+            <StockAlertCard alerts={shopAlerts} type="shop" />
+          </div>
+        )}
 
         {/* Performance & Recent Sales */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
