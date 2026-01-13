@@ -55,33 +55,51 @@ Start local Supabase instance:
 npx supabase start
 ```
 
-This will output your local credentials. Create a `.env` file:
+The `.env` file is already configured with:
 
 ```env
-VITE_SUPABASE_URL=http://127.0.0.1:54321
-VITE_SUPABASE_ANON_KEY=your-anon-key-from-supabase-start
-VITE_DISABLE_ROLE_GUARD=true
+VITE_SUPABASE_URL=http://localhost:54321
+VITE_SUPABASE_ANON_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
+VITE_DISABLE_ROLE_GUARD=false
 ```
 
-### 4. Run Database Migrations
+### 4. Initialize Database
 
+Two options available:
+
+**Option A: Essential Data Only** (Recommended for production-like testing)
 ```bash
-npx supabase db reset
+npm run db:reset
 ```
 
-This creates all tables and seeds initial data including:
-- Admin user: `admin@stocksync.com` / `admin123`
-- 3 sample shops
-- 10 sample products
-- Sample inventory, sales, and transactions
+**Option B: Full Dummy Data** (For comprehensive testing)
+```bash
+npm run db:seed:dummy
+```
 
-### 5. Start Development Server
+Both commands:
+- Run database migrations (creates all tables)
+- Create 4 test users via Admin API
+- Seed essential or dummy data
+
+### 5. Test Users
+
+After running db:reset or db:seed:dummy:
+
+| Email | Password | Role |
+|-------|----------|------|
+| superadmin@example.com | admin123 | Super Admin |
+| manager@example.com | admin123 | Administrator |
+| salesperson@example.com | admin123 | Sales Person |
+| viewer@example.com | admin123 | Report Viewer |
+
+### 6. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:8000`
+Visit `http://localhost:8000` and login with any test user above.
 
 ## Network Access (Multi-Device Development)
 
@@ -214,17 +232,17 @@ The app implements complete authentication with role-based access control:
 - **4 User Roles**: Super Admin, Administrator, Sales Person, Report Viewer
 - **Role-Based Navigation**: Menu items filtered by user role
 - **Session Management**: Secure session handling with Supabase Auth
-- **Test Users**: Demo accounts included for testing
+- **Test Users**: Pre-configured for immediate testing
 
-**For complete authentication guide and role details, see [AUTHENTICATION.md](AUTHENTICATION.md)**
-
-Test users available:
-- `superadmin@example.com` (super_admin) - Full access
-- `manager@example.com` (administrator) - Admin access
+**Test credentials (automatically created on db reset):**
+- `superadmin@example.com` (super_admin) - Full system access
+- `manager@example.com` (administrator) - Shop and inventory management
 - `salesperson@example.com` (sales_person) - POS only
-- `viewer@example.com` (report_viewer) - Reports only
+- `viewer@example.com` (report_viewer) - Reports and analytics only
 
 Password: `admin123` for all test accounts
+
+**For detailed authentication guide, see [QUICK_START_AUTH.md](QUICK_START_AUTH.md)**
 
 ### Project Structure
 
@@ -247,11 +265,15 @@ supabase/
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server on port 8000
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
-- `npx supabase db reset` - Reset database and reseed
-- `npx supabase migration new <name>` - Create new migration
+- `npm run lint` - Check code quality
+- `npm run lint:fix` - Auto-fix linting issues
+- `npm run db:reset` - Reset database with essential data + create users
+- `npm run db:seed` - Alias for db:reset
+- `npm run db:seed:dummy` - Reset database with full test/dummy data + create users
+- `npx supabase migration new <name>` - Create new database migration
 
 ### Adding New Features
 
@@ -265,12 +287,15 @@ supabase/
 
 ```env
 # Supabase Configuration
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_URL=http://localhost:54321
+VITE_SUPABASE_ANON_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
 
-# Development
-VITE_DISABLE_ROLE_GUARD=true  # Bypass auth in development
+# Authentication (default: false - auth required)
+# Set to false for production or true to skip auth in development
+VITE_DISABLE_ROLE_GUARD=false
 ```
+
+**Note**: The `.env` file is already configured. Only modify if you're using a different Supabase instance.
 
 ## Deployment
 
@@ -300,7 +325,7 @@ Output will be in `dist/` directory.
 
 ### Port 8000 already in use
 
-Change port in `vite.config.js`:
+The dev server will automatically use the next available port. Check the terminal output for the actual URL. Or manually change in `vite.config.js`:
 
 ```js
 server: {
@@ -310,25 +335,52 @@ server: {
 
 ### Database connection issues
 
-Ensure Supabase is running:
+1. **Check Supabase is running:**
+   ```bash
+   npx supabase status
+   ```
 
-```bash
-npx supabase status
-```
+2. **Restart Supabase:**
+   ```bash
+   npx supabase stop
+   npx supabase start
+   ```
 
-Restart if needed:
+3. **Reset and reinitialize:**
+   ```bash
+   npx supabase db reset
+   npm run db:reset
+   ```
 
-```bash
-npx supabase stop
-npx supabase start
-```
+### Login fails with "Invalid credentials"
 
-### TypeScript errors
+1. Verify users were created:
+   ```bash
+   npx supabase status
+   # Visit Supabase Studio: http://127.0.0.1:54323
+   # Check auth.users table
+   ```
 
-These are JSConfig type-checking warnings and don't affect runtime. To disable:
+2. Recreate test users:
+   ```bash
+   npm run db:reset
+   ```
 
-1. Rename `jsconfig.json` to `jsconfig.json.bak`, or
-2. Install TypeScript and convert project
+### Console errors about React Router
+
+These are informational warnings from React Router about future v7 compatibility. They don't affect functionality. The app is configured with the future flags to prepare for v7.
+
+### CORS or connection errors
+
+1. Verify Supabase is accessible:
+   ```bash
+   curl http://localhost:54321/auth/v1/health
+   # Should return 200 OK
+   ```
+
+2. Check firewall allows ports 8000 and 54321
+
+3. Clear browser cache and reload
 
 ## Contributing
 

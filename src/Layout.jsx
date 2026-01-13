@@ -21,6 +21,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
+import { useAuth } from "@/lib/AuthContext";
 import { appParams } from "@/lib/app-params";
 
 const allNavItems = [
@@ -42,6 +43,7 @@ export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { disableRoleGuard } = appParams;
+  const { signOut } = useAuth();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -60,12 +62,13 @@ export default function Layout({ children, currentPageName }) {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate('/login');
+      await signOut();
+      // Force full page reload to clear all state
+      window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
       // Force navigation even if logout fails
-      navigate('/login');
+      window.location.href = '/login';
     }
   };
 

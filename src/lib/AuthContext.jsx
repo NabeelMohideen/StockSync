@@ -26,21 +26,22 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
         setUser(null);
       } else if (session?.user) {
-        // Check if user exists in the users table
+        // Authenticate the user from the session
+        setUser(session.user);
+        setIsAuthenticated(true);
+        
+        // Check if user exists in the users table (for profile data)
+        // This is just for logging - we don't block authentication
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         
-        if (userError || !userData) {
-          console.warn('User not registered in users table:', userError);
-          setAuthError({ type: 'user_not_registered', message: 'User not registered' });
-          setIsAuthenticated(false);
-          setUser(null);
-        } else {
-          setUser(session.user);
-          setIsAuthenticated(true);
+        if (userError) {
+          console.warn('Error checking user profile:', userError.message);
+        } else if (!userData) {
+          console.info('User authenticated but no profile in users table. Create profile in public.users table for additional features.');
         }
       } else {
         setIsAuthenticated(false);
