@@ -28,7 +28,7 @@ export default function ProductCard({ product, onAdd, available }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold text-slate-900">
-                LKR {product.price?.toLocaleString()}
+                LKR {product.unit_price?.toLocaleString()}
               </p>
               <p className={cn(
                 "text-xs font-medium",

@@ -1,16 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/api/supabaseClient";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
+import { appParams } from "@/lib/app-params";
 
 export default function AccessControl({ children, allowedLevels }) {
   const navigate = useNavigate();
+  const { disableRoleGuard } = appParams;
+  
+  // If role guard is disabled, render immediately without auth check
+  if (disableRoleGuard) {
+    return children;
+  }
   
   const { data: user, isLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false
+    retry: false,
+    enabled: !disableRoleGuard
   });
 
   useEffect(() => {

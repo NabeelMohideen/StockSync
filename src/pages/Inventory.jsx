@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db, supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,29 +41,42 @@ export default function Inventory() {
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list()
+    queryFn: async () => {
+      const { data, error } = await db.products.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shops = [] } = useQuery({
     queryKey: ['shops'],
-    queryFn: () => base44.entities.Shop.list()
+    queryFn: async () => {
+      const { data, error } = await db.shops.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shopInventory = [] } = useQuery({
     queryKey: ['shopInventory'],
-    queryFn: () => base44.entities.ShopInventory.list()
-  });
-
-  const updateStorageMutation = useMutation({
-    mutationFn: ({ id, quantity }) => base44.entities.Product.update(id, { storage_quantity: quantity }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      setEditingItem(null);
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory').select('*');
+      if (error) throw error;
+      return data || [];
     }
   });
 
   const updateShopInventoryMutation = useMutation({
-    mutationFn: ({ id, quantity }) => base44.entities.ShopInventory.update(id, { quantity }),
+    mutationFn: async ({ id, quantity }) => {
+      const { data, error } = await supabase
+        .from('inventory')
+        .update({ quantity })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopInventory'] });
       setEditingItem(null);
@@ -77,11 +90,7 @@ export default function Inventory() {
 
   const handleSaveEdit = () => {
     const quantity = parseInt(editQuantity) || 0;
-    if (editingItem.type === "storage") {
-      updateStorageMutation.mutate({ id: editingItem.id, quantity });
-    } else {
-      updateShopInventoryMutation.mutate({ id: editingItem.id, quantity });
-    }
+    updateShopInventoryMutation.mutate({ id: editingItem.id, quantity });
   };
 
   const filteredProducts = products.filter(p => 

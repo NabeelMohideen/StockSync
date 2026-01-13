@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db, supabase } from "@/api/supabaseClient";
 import { Package, Store, DollarSign, TrendingUp, Warehouse, AlertTriangle } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import StockAlertCard from "@/components/dashboard/StockAlertCard";
@@ -10,42 +10,49 @@ import AccessControl from "@/components/AccessControl";
 export default function Dashboard() {
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list()
+    queryFn: async () => {
+      const { data, error } = await db.products.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shops = [] } = useQuery({
     queryKey: ['shops'],
-    queryFn: () => base44.entities.Shop.list()
+    queryFn: async () => {
+      const { data, error } = await db.shops.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
-    queryFn: () => base44.entities.Sale.list('-sale_date', 100)
+    queryFn: async () => {
+      const { data, error } = await db.sales.list(100);
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shopInventory = [] } = useQuery({
     queryKey: ['shopInventory'],
-    queryFn: () => base44.entities.ShopInventory.list()
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory').select('*');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   // Calculate stats
-  const totalStorageStock = products.reduce((sum, p) => sum + (p.storage_quantity || 0), 0);
+  const totalProducts = products.length;
   const totalShopStock = shopInventory.reduce((sum, i) => sum + (i.quantity || 0), 0);
-  const totalSalesAmount = sales.reduce((sum, s) => sum + (s.total_amount || 0), 0);
-  const totalUnitsSold = sales.reduce((sum, s) => sum + (s.quantity || 0), 0);
+  const totalSalesAmount = sales.reduce((sum, s) => sum + (parseFloat(s.final_amount) || 0), 0);
+  const recentSalesCount = sales.length;
 
-  // Storage stock alerts
-  const storageAlerts = products
-    .filter(p => (p.storage_quantity || 0) <= (p.min_stock_level || 5))
-    .map(p => ({
-      productName: p.name,
-      quantity: p.storage_quantity || 0,
-      minLevel: p.min_stock_level || 5
-    }));
-
-  // Shop stock alerts
+  // Shop stock alerts (low inventory)
   const shopAlerts = shopInventory
-    .filter(i => (i.quantity || 0) <= (i.min_stock_level || 2))
+    .filter(i => (i.quantity || 0) <= 5) // Alert when quantity is 5 or less
     .map(i => {
       const product = products.find(p => p.id === i.product_id);
       const shop = shops.find(s => s.id === i.shop_id);
@@ -53,7 +60,7 @@ export default function Dashboard() {
         productName: product?.name || 'Unknown',
         shopName: shop?.name || 'Unknown Shop',
         quantity: i.quantity || 0,
-        minLevel: i.min_stock_level || 2
+        minLevel: 5
       };
     });
 
@@ -70,11 +77,10 @@ export default function Dashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <StatCard 
-            title="Storage Stock" 
-            value={totalStorageStock}
-            subtitle={`${products.length} products`}
-            icon={Warehouse}
-            alert={storageAlerts.length > 0 ? `${storageAlerts.length} low stock items` : null}
+            title="Total Products" 
+            value={totalProducts}
+            subtitle={`${totalProducts} products`}
+            icon={Package}
             className="hover:scale-[1.02] transition-transform"
           />
           <StatCard 
@@ -88,13 +94,13 @@ export default function Dashboard() {
           <StatCard 
             title="Total Revenue" 
             value={`LKR ${totalSalesAmount.toLocaleString()}`}
-            subtitle={`${sales.length} orders`}
+            subtitle={`${recentSalesCount} orders`}
             icon={DollarSign}
             className="hover:scale-[1.02] transition-transform"
           />
           <StatCard 
-            title="Units Sold" 
-            value={totalUnitsSold}
+            title="Recent Sales" 
+            value={recentSalesCount}
             subtitle="Total TVs sold"
             icon={TrendingUp}
             className="hover:scale-[1.02] transition-transform"
@@ -102,9 +108,8 @@ export default function Dashboard() {
         </div>
 
         {/* Alerts Section */}
-        {(storageAlerts.length > 0 || shopAlerts.length > 0) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-            <StockAlertCard alerts={storageAlerts} type="storage" />
+        {shopAlerts.length > 0 && (
+          <div className="grid grid-cols-1 gap-6 mb-10">
             <StockAlertCard alerts={shopAlerts} type="shop" />
           </div>
         )}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db, supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,45 +55,79 @@ export default function Sales() {
 
   const { data: sales = [], isLoading } = useQuery({
     queryKey: ['sales'],
-    queryFn: () => base44.entities.Sale.list('-sale_date', 200)
+    queryFn: async () => {
+      const { data, error } = await db.sales.list(200);
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list()
+    queryFn: async () => {
+      const { data, error } = await db.products.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shops = [] } = useQuery({
     queryKey: ['shops'],
-    queryFn: () => base44.entities.Shop.list()
+    queryFn: async () => {
+      const { data, error } = await db.shops.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shopInventory = [] } = useQuery({
     queryKey: ['shopInventory'],
-    queryFn: () => base44.entities.ShopInventory.list()
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory').select('*');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const product = products.find(p => p.id === data.product_id);
-      const saleData = {
-        ...data,
-        unit_price: product?.price || 0,
-        total_amount: (product?.price || 0) * data.quantity
-      };
+    mutationFn: async (saleFormData) => {
+      const product = products.find(p => p.id === saleFormData.product_id);
+      const totalAmount = (product?.unit_price || 0) * saleFormData.quantity;
       
       // Create sale
-      await base44.entities.Sale.create(saleData);
+      const { data: sale, error: saleError } = await db.sales.create({
+        shop_id: saleFormData.shop_id,
+        customer_name: saleFormData.customer_name,
+        customer_phone: saleFormData.customer_phone,
+        sale_date: saleFormData.sale_date,
+        payment_method: saleFormData.payment_method,
+        final_amount: totalAmount,
+        notes: saleFormData.notes
+      });
+      if (saleError) throw saleError;
+
+      // Create sale item
+      const { error: itemError } = await supabase.from('sale_items').insert({
+        sale_id: sale.id,
+        product_id: saleFormData.product_id,
+        quantity: saleFormData.quantity,
+        unit_price: product?.unit_price || 0,
+        total_price: totalAmount
+      });
+      if (itemError) throw itemError;
       
       // Update shop inventory
       const inventory = shopInventory.find(
-        i => i.shop_id === data.shop_id && i.product_id === data.product_id
+        i => i.shop_id === saleFormData.shop_id && i.product_id === saleFormData.product_id
       );
       if (inventory) {
-        await base44.entities.ShopInventory.update(inventory.id, {
-          quantity: Math.max(0, (inventory.quantity || 0) - data.quantity)
-        });
+        const { error: invError } = await supabase
+          .from('inventory')
+          .update({ quantity: Math.max(0, (inventory.quantity || 0) - saleFormData.quantity) })
+          .eq('id', inventory.id);
+        if (invError) throw invError;
       }
+      return sale;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });

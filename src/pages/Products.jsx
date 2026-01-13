@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,18 +28,26 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
-    name: "", brand: "", sku: "", size: "", price: "", cost: "", storage_quantity: "", min_stock_level: "5", image_url: ""
+    name: "", brand: "", model: "", category: "", sku: "", barcode: "", unit_price: "", cost_price: "", has_serial_numbers: false, description: ""
   });
 
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list()
+    queryFn: async () => {
+      const { data, error } = await db.products.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Product.create(data),
+    mutationFn: async (productData) => {
+      const { data, error } = await db.products.create(productData);
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       resetForm();
@@ -47,7 +55,11 @@ export default function Products() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Product.update(id, data),
+    mutationFn: async ({ id, data: productData }) => {
+      const { data, error } = await db.products.update(id, productData);
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       resetForm();
@@ -55,12 +67,15 @@ export default function Products() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Product.delete(id),
+    mutationFn: async (id) => {
+      const { error } = await db.products.delete(id);
+      if (error) throw error;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] })
   });
 
   const resetForm = () => {
-    setFormData({ name: "", brand: "", sku: "", size: "", price: "", cost: "", storage_quantity: "", min_stock_level: "5", image_url: "" });
+    setFormData({ name: "", brand: "", model: "", category: "", sku: "", barcode: "", unit_price: "", cost_price: "", has_serial_numbers: false, description: "" });
     setEditingProduct(null);
     setIsOpen(false);
   };
@@ -69,10 +84,9 @@ export default function Products() {
     e.preventDefault();
     const data = {
       ...formData,
-      price: parseFloat(formData.price) || 0,
-      cost: parseFloat(formData.cost) || 0,
-      storage_quantity: parseInt(formData.storage_quantity) || 0,
-      min_stock_level: parseInt(formData.min_stock_level) || 5
+      unit_price: parseFloat(formData.unit_price) || 0,
+      cost_price: parseFloat(formData.cost_price) || 0,
+      has_serial_numbers: formData.has_serial_numbers || false
     };
     if (editingProduct) {
       updateMutation.mutate({ id: editingProduct.id, data });
@@ -135,37 +149,47 @@ export default function Products() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label>Model</Label>
+                    <Input value={formData.model} onChange={(e) => setFormData({...formData, model: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Input value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} placeholder='e.g. TVs' />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label>SKU *</Label>
                     <Input value={formData.sku} onChange={(e) => setFormData({...formData, sku: e.target.value})} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>Screen Size</Label>
-                    <Input value={formData.size} onChange={(e) => setFormData({...formData, size: e.target.value})} placeholder='e.g. 55"' />
+                    <Label>Barcode</Label>
+                    <Input value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Price *</Label>
-                    <Input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required />
+                    <Label>Unit Price *</Label>
+                    <Input type="number" step="0.01" value={formData.unit_price} onChange={(e) => setFormData({...formData, unit_price: e.target.value})} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>Cost</Label>
-                    <Input type="number" step="0.01" value={formData.cost} onChange={(e) => setFormData({...formData, cost: e.target.value})} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Storage Quantity</Label>
-                    <Input type="number" value={formData.storage_quantity} onChange={(e) => setFormData({...formData, storage_quantity: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Min Stock Level</Label>
-                    <Input type="number" value={formData.min_stock_level} onChange={(e) => setFormData({...formData, min_stock_level: e.target.value})} />
+                    <Label>Cost Price</Label>
+                    <Input type="number" step="0.01" value={formData.cost_price} onChange={(e) => setFormData({...formData, cost_price: e.target.value})} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Image URL</Label>
-                  <Input value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." />
+                  <Label>Description</Label>
+                  <Input value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Product description" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="serial" 
+                    checked={formData.has_serial_numbers} 
+                    onChange={(e) => setFormData({...formData, has_serial_numbers: e.target.checked})}
+                    className="rounded border-slate-300"
+                  />
+                  <Label htmlFor="serial" className="cursor-pointer">Has Serial Numbers</Label>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
                   <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
@@ -198,9 +222,9 @@ export default function Products() {
               <TableRow className="bg-slate-50/50">
                 <TableHead className="font-medium">Product</TableHead>
                 <TableHead className="font-medium">SKU</TableHead>
-                <TableHead className="font-medium">Size</TableHead>
-                <TableHead className="font-medium">Price</TableHead>
-                <TableHead className="font-medium">Storage Stock</TableHead>
+                <TableHead className="font-medium">Category</TableHead>
+                <TableHead className="font-medium">Unit Price</TableHead>
+                <TableHead className="font-medium">Serial#</TableHead>
                 <TableHead className="font-medium text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -211,34 +235,26 @@ export default function Products() {
                 <TableRow><TableCell colSpan={6} className="text-center py-8 text-slate-500">No products found</TableCell></TableRow>
               ) : (
                 filteredProducts.map((product) => {
-                  const isLowStock = (product.storage_quantity || 0) <= (product.min_stock_level || 5);
                   return (
                     <TableRow key={product.id} className="hover:bg-slate-50/50">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                            {product.image_url ? (
-                              <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
-                            ) : (
-                              <Package className="w-5 h-5 text-slate-400" />
-                            )}
+                            <Package className="w-5 h-5 text-slate-400" />
                           </div>
                           <div>
                             <p className="font-medium text-slate-900">{product.name}</p>
-                            <p className="text-sm text-slate-500">{product.brand}</p>
+                            <p className="text-sm text-slate-500">{product.brand} {product.model}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-600">{product.sku}</TableCell>
-                      <TableCell className="text-slate-600">{product.size || '-'}</TableCell>
-                      <TableCell className="font-medium text-slate-900">LKR {product.price?.toLocaleString()}</TableCell>
+                      <TableCell className="text-slate-600">{product.category || '-'}</TableCell>
+                      <TableCell className="font-medium text-slate-900">LKR {product.unit_price?.toLocaleString()}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {isLowStock && <AlertTriangle className="w-4 h-4 text-amber-500" />}
-                          <span className={cn("font-medium", isLowStock ? "text-amber-600" : "text-slate-900")}>
-                            {product.storage_quantity || 0}
-                          </span>
-                        </div>
+                        <span className={cn("text-sm", product.has_serial_numbers ? "text-green-600" : "text-slate-400")}>
+                          {product.has_serial_numbers ? 'Yes' : 'No'}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

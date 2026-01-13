@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db, supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,126 +20,130 @@ export default function POS() {
 
   const queryClient = useQueryClient();
 
-  // Get current user to check if they're assigned to a shop
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me()
-  });
-
-  // Auto-select shop for sales persons
-  useEffect(() => {
-    if (currentUser?.access_level === 'sales_person' && currentUser?.assigned_shop_id) {
-      setSelectedShop(currentUser.assigned_shop_id);
-    }
-  }, [currentUser]);
-
   const { data: shops = [] } = useQuery({
     queryKey: ['shops'],
-    queryFn: () => base44.entities.Shop.list()
+    queryFn: async () => {
+      const { data, error } = await db.shops.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list()
+    queryFn: async () => {
+      const { data, error } = await db.products.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shopInventory = [] } = useQuery({
     queryKey: ['shopInventory'],
-    queryFn: () => base44.entities.ShopInventory.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!selectedShop
   });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list()
+    queryFn: async () => {
+      const { data, error } = await db.customers.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createSaleMutation = useMutation({
     mutationFn: async ({ saleData, items }) => {
       // Check if customer exists, if not create
-      let existingCustomer = customers.find(c => c.phone === saleData.customer_phone);
-      if (!existingCustomer && saleData.customer_phone) {
-        existingCustomer = await base44.entities.Customer.create({
-          name: saleData.customer_name,
-          phone: saleData.customer_phone,
-          email: saleData.customer_email || "",
-          address: saleData.customer_address || ""
-        });
+      let customerId = null;
+      if (saleData.customer_phone) {
+        let existingCustomer = customers.find(c => c.phone === saleData.customer_phone);
+        if (!existingCustomer) {
+          const { data: newCustomer, error } = await db.customers.create({
+            full_name: saleData.customer_name,
+            phone: saleData.customer_phone,
+            email: saleData.customer_email || "",
+            address: saleData.customer_address || ""
+          });
+          if (error) throw error;
+          customerId = newCustomer.id;
+        } else {
+          customerId = existingCustomer.id;
+        }
       }
 
-      // Create sales for each item
-      const sales = [];
+      // Calculate totals
+      const totalAmount = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
       const saleDate = new Date().toISOString().split('T')[0];
-      let creditSaleId = null;
-      
+
+      // Create sale record
+      const { data: sale, error: saleError } = await db.sales.create({
+        shop_id: selectedShop,
+        customer_id: customerId,
+        customer_name: saleData.customer_name,
+        customer_phone: saleData.customer_phone,
+        sale_date: saleDate,
+        payment_method: saleData.payment_method,
+        final_amount: totalAmount,
+        notes: saleData.notes
+      });
+      if (saleError) throw saleError;
+
+      // Create sale items and warranties
       for (const item of items) {
-        const serialNumber = saleData.serialNumbers?.[item.id] || "";
-        
-        const sale = await base44.entities.Sale.create({
-          shop_id: selectedShop,
+        // Create sale item
+        const { error: itemError } = await supabase.from('sale_items').insert({
+          sale_id: sale.id,
           product_id: item.id,
           quantity: item.quantity,
-          unit_price: item.price,
-          total_amount: item.price * item.quantity,
-          customer_name: saleData.customer_name,
-          customer_phone: saleData.customer_phone,
-          payment_method: saleData.payment_method,
-          sale_date: saleDate,
-          notes: saleData.notes
+          unit_price: item.unit_price,
+          total_price: item.unit_price * item.quantity,
+          serial_number: saleData.serialNumbers?.[item.id] || null
         });
-        sales.push(sale);
+        if (itemError) throw itemError;
 
-        // Create warranty for each item
+        // Create warranty
         const warrantyExpiryDate = new Date();
         warrantyExpiryDate.setMonth(warrantyExpiryDate.getMonth() + 12);
         
-        await base44.entities.Warranty.create({
+        const { error: warrantyError } = await db.warranties.create({
           sale_id: sale.id,
           product_id: item.id,
           customer_name: saleData.customer_name,
           customer_phone: saleData.customer_phone || "",
           warranty_period_months: 12,
           purchase_date: saleDate,
-          warranty_expiry_date: warrantyExpiryDate.toISOString().split('T')[0],
-          serial_number: serialNumber,
+          expiry_date: warrantyExpiryDate.toISOString().split('T')[0],
+          serial_number: saleData.serialNumbers?.[item.id] || null,
           status: "active"
         });
+        if (warrantyError) throw warrantyError;
 
         // Update shop inventory
         const inventory = shopInventory.find(
           inv => inv.shop_id === selectedShop && inv.product_id === item.id
         );
         if (inventory) {
-          await base44.entities.ShopInventory.update(inventory.id, {
-            quantity: Math.max(0, (inventory.quantity || 0) - item.quantity)
-          });
+          const { error: invError } = await supabase
+            .from('inventory')
+            .update({ quantity: Math.max(0, (inventory.quantity || 0) - item.quantity) })
+            .eq('id', inventory.id);
+          if (invError) throw invError;
         }
       }
 
-      // If payment method is credit, create credit sale record
-      if (saleData.payment_method === "credit") {
-        const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const creditSale = await base44.entities.CreditSale.create({
-          sale_id: sales[0].id,
-          customer_name: saleData.customer_name,
-          customer_phone: saleData.customer_phone,
-          total_amount: totalAmount,
-          amount_paid: 0,
-          balance_due: totalAmount,
-          status: "pending",
-          due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        });
-        creditSaleId = creditSale.id;
-      }
-
-      return { sale: sales[0], items, customerData: saleData }; // Return sale and items for invoice
+      return { sale, items, customerData: saleData };
     },
     onSuccess: ({ sale, items, customerData }) => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['shopInventory'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['warranties'] });
-      queryClient.invalidateQueries({ queryKey: ['creditSales'] });
       setCompletedSale({ sale, items, customerData });
       setIsCheckoutOpen(false);
       setIsInvoiceOpen(true);
@@ -205,7 +209,7 @@ export default function POS() {
     });
   };
 
-  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const total = cartItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
 
   const currentShop = shops.find(s => s.id === selectedShop);
 
@@ -220,17 +224,9 @@ export default function POS() {
           </div>
           
           <div className="flex items-center gap-4">
-            {currentUser?.access_level === 'sales_person' && currentUser?.assigned_shop_id ? (
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
-                <Store className="w-5 h-5 text-slate-600" />
-                <span className="font-medium text-slate-900">
-                  {shops.find(s => s.id === currentUser.assigned_shop_id)?.name || 'Your Shop'}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
-                <Store className="w-5 h-5 text-slate-600" />
-                <Select value={selectedShop} onValueChange={setSelectedShop}>
+            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
+              <Store className="w-5 h-5 text-slate-600" />
+              <Select value={selectedShop} onValueChange={setSelectedShop}>
                   <SelectTrigger className="w-64 border-0 bg-transparent focus:ring-0">
                     <SelectValue placeholder="Select Shop" />
                   </SelectTrigger>
@@ -243,7 +239,6 @@ export default function POS() {
                   </SelectContent>
                 </Select>
               </div>
-            )}
           </div>
         </div>
       </div>

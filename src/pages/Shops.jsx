@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db, supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,28 +21,44 @@ export default function Shops() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingShop, setEditingShop] = useState(null);
   const [formData, setFormData] = useState({
-    shop_id: "", name: "", location: "", manager: "", phone: "", is_active: true
+    name: "", location: "", phone: "", email: "", is_active: true
   });
 
   const queryClient = useQueryClient();
 
   const { data: shops = [], isLoading } = useQuery({
     queryKey: ['shops'],
-    queryFn: () => base44.entities.Shop.list()
+    queryFn: async () => {
+      const { data, error } = await db.shops.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
-    queryFn: () => base44.entities.Sale.list()
+    queryFn: async () => {
+      const { data, error } = await db.sales.list(500);
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shopInventory = [] } = useQuery({
     queryKey: ['shopInventory'],
-    queryFn: () => base44.entities.ShopInventory.list()
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory').select('*');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Shop.create(data),
+    mutationFn: async (shopData) => {
+      const { data, error } = await db.shops.create(shopData);
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
       resetForm();
@@ -50,7 +66,11 @@ export default function Shops() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Shop.update(id, data),
+    mutationFn: async ({ id, data: shopData }) => {
+      const { data, error } = await db.shops.update(id, shopData);
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
       resetForm();
@@ -58,7 +78,10 @@ export default function Shops() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Shop.delete(id),
+    mutationFn: async (id) => {
+      const { error } = await db.shops.delete(id);
+      if (error) throw error;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['shops'] })
   });
 

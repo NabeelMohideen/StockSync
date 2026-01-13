@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db, supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,40 +49,49 @@ export default function StockTransfers() {
 
   const { data: transfers = [], isLoading } = useQuery({
     queryKey: ['transfers'],
-    queryFn: () => base44.entities.StockTransfer.list('-created_date', 100)
+    queryFn: async () => {
+      const { data, error } = await db.stockTransfers.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list()
+    queryFn: async () => {
+      const { data, error } = await db.products.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shops = [] } = useQuery({
     queryKey: ['shops'],
-    queryFn: () => base44.entities.Shop.list()
+    queryFn: async () => {
+      const { data, error } = await db.shops.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shopInventory = [] } = useQuery({
     queryKey: ['shopInventory'],
-    queryFn: () => base44.entities.ShopInventory.list()
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory').select('*');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data) => {
-      // Create transfer
-      await base44.entities.StockTransfer.create({
-        ...data,
+    mutationFn: async (transferData) => {
+      const { data, error } = await db.stockTransfers.create({
+        ...transferData,
         from_location: "storage",
         status: "pending"
       });
-      
-      // Update storage quantity
-      const product = products.find(p => p.id === data.product_id);
-      if (product) {
-        await base44.entities.Product.update(product.id, {
-          storage_quantity: (product.storage_quantity || 0) - data.quantity
-        });
-      }
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
@@ -93,7 +102,8 @@ export default function StockTransfers() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ transfer, newStatus }) => {
-      await base44.entities.StockTransfer.update(transfer.id, { status: newStatus });
+      const { error } = await db.stockTransfers.update(transfer.id, { status: newStatus });
+      if (error) throw error;
       
       // If completed, update shop inventory
       if (newStatus === "completed") {
@@ -102,25 +112,18 @@ export default function StockTransfers() {
         );
         
         if (existingInventory) {
-          await base44.entities.ShopInventory.update(existingInventory.id, {
-            quantity: (existingInventory.quantity || 0) + transfer.quantity
-          });
+          const { error: invError } = await supabase
+            .from('inventory')
+            .update({ quantity: (existingInventory.quantity || 0) + transfer.quantity })
+            .eq('id', existingInventory.id);
+          if (invError) throw invError;
         } else {
-          await base44.entities.ShopInventory.create({
+          const { error: invError } = await supabase.from('inventory').insert({
             shop_id: transfer.to_location,
             product_id: transfer.product_id,
             quantity: transfer.quantity
           });
-        }
-      }
-      
-      // If cancelled, return to storage
-      if (newStatus === "cancelled" && transfer.status !== "completed") {
-        const product = products.find(p => p.id === transfer.product_id);
-        if (product) {
-          await base44.entities.Product.update(product.id, {
-            storage_quantity: (product.storage_quantity || 0) + transfer.quantity
-          });
+          if (invError) throw invError;
         }
       }
     },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,31 +47,45 @@ export default function Warranties() {
 
   const { data: warranties = [], isLoading } = useQuery({
     queryKey: ['warranties'],
-    queryFn: () => base44.entities.Warranty.list('-created_date', 1000)
+    queryFn: async () => {
+      const { data, error } = await db.warranties.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.list()
+    queryFn: async () => {
+      const { data, error } = await db.products.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
-    queryFn: () => base44.entities.Sale.list('-sale_date', 1000)
+    queryFn: async () => {
+      const { data, error } = await db.sales.list(1000);
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => {
-      const purchaseDate = new Date(data.purchase_date);
-      const expiryDate = addMonths(purchaseDate, parseInt(data.warranty_period_months));
+    mutationFn: async (warrantyData) => {
+      const purchaseDate = new Date(warrantyData.purchase_date);
+      const expiryDate = addMonths(purchaseDate, parseInt(warrantyData.warranty_period_months));
       const isExpired = isPast(expiryDate);
       
-      return base44.entities.Warranty.create({
-        ...data,
-        warranty_expiry_date: expiryDate.toISOString().split('T')[0],
+      const { data, error } = await db.warranties.create({
+        ...warrantyData,
+        expiry_date: expiryDate.toISOString().split('T')[0],
         status: isExpired ? 'expired' : 'active',
-        warranty_period_months: parseInt(data.warranty_period_months)
+        warranty_period_months: parseInt(warrantyData.warranty_period_months)
       });
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warranties'] });
@@ -80,17 +94,19 @@ export default function Warranties() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => {
-      const purchaseDate = new Date(data.purchase_date);
-      const expiryDate = addMonths(purchaseDate, parseInt(data.warranty_period_months));
+    mutationFn: async ({ id, data: warrantyData }) => {
+      const purchaseDate = new Date(warrantyData.purchase_date);
+      const expiryDate = addMonths(purchaseDate, parseInt(warrantyData.warranty_period_months));
       const isExpired = isPast(expiryDate);
       
-      return base44.entities.Warranty.update(id, {
-        ...data,
-        warranty_expiry_date: expiryDate.toISOString().split('T')[0],
-        status: isExpired ? 'expired' : (data.status === 'claimed' ? 'claimed' : 'active'),
-        warranty_period_months: parseInt(data.warranty_period_months)
+      const { data, error } = await db.warranties.update(id, {
+        ...warrantyData,
+        expiry_date: expiryDate.toISOString().split('T')[0],
+        status: isExpired ? 'expired' : (warrantyData.status === 'claimed' ? 'claimed' : 'active'),
+        warranty_period_months: parseInt(warrantyData.warranty_period_months)
       });
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warranties'] });

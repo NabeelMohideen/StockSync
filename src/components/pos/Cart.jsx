@@ -4,7 +4,7 @@ import { ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) {
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const total = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
 
   return (
     <Card className="h-full flex flex-col max-h-[calc(100vh-180px)] lg:max-h-none">
@@ -66,7 +66,7 @@ export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) 
                       </Button>
                     </div>
                     <p className="font-semibold text-slate-900">
-                      LKR {(item.price * item.quantity).toLocaleString()}
+                      LKR {(item.unit_price * item.quantity).toLocaleString()}
                     </p>
                   </div>
                 </div>

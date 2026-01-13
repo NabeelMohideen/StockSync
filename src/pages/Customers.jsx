@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,18 +28,26 @@ export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [formData, setFormData] = useState({
-    name: "", phone: "", email: "", address: "", notes: ""
+    full_name: "", phone: "", email: "", address: "", city: "", notes: ""
   });
 
   const queryClient = useQueryClient();
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => base44.entities.Customer.list('-created_date', 1000)
+    queryFn: async () => {
+      const { data, error } = await db.customers.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Customer.create(data),
+    mutationFn: async (customerData) => {
+      const { data, error } = await db.customers.create(customerData);
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       resetForm();
@@ -47,7 +55,11 @@ export default function Customers() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Customer.update(id, data),
+    mutationFn: async ({ id, data: customerData }) => {
+      const { data, error } = await db.customers.update(id, customerData);
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       resetForm();

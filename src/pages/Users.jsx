@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,19 +50,28 @@ export default function Users() {
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
-    queryFn: () => base44.entities.User.list()
+    queryFn: async () => {
+      const { data, error } = await db.users.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: shops = [] } = useQuery({
     queryKey: ['shops'],
-    queryFn: () => base44.entities.Shop.list()
+    queryFn: async () => {
+      const { data, error } = await db.shops.list();
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const inviteUserMutation = useMutation({
-    mutationFn: async ({ email, access_level, assigned_shop_id }) => {
-      // Invite user with 'user' role (not admin)
-      await base44.users.inviteUser(email, "user");
-      // Note: The invited user will need to update their access_level and shop after accepting
+    mutationFn: async ({ email, role, full_name }) => {
+      // For now, users need to be created via Supabase Auth dashboard or CLI
+      // This is a placeholder - actual implementation would use Supabase Auth Admin API
+      console.log('User invite not yet implemented:', email, role);
+      throw new Error('User invite feature requires Supabase Auth Admin API setup');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -73,7 +82,11 @@ export default function Users() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.User.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      const { data: result, error } = await db.users.update(id, data);
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setEditingUser(null);

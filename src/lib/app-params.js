@@ -34,6 +34,12 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 	return null;
 }
 
+const toBool = (val) => {
+	if (val === null || val === undefined) return false;
+	if (typeof val === 'string') return val.toLowerCase() === 'true';
+	return !!val;
+}
+
 const getAppParams = () => {
 	if (getAppParamValue("clear_access_token") === 'true') {
 		storage.removeItem('base44_access_token');
@@ -45,6 +51,7 @@ const getAppParams = () => {
 		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
+    disableRoleGuard: toBool(getAppParamValue("disable_role_guard", { defaultValue: import.meta.env.VITE_DISABLE_ROLE_GUARD })),
 	}
 }
 
