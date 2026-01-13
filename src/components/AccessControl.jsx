@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { db } from "@/api/supabaseClient";
+import { supabase } from "@/api/supabaseClient";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 
 export default function AccessControl({ children, allowedLevels }) {
@@ -17,14 +16,19 @@ export default function AccessControl({ children, allowedLevels }) {
   
   const { data: user, isLoading } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return null;
+      const { data: userData } = await supabase.from('users').select('*').eq('id', authUser.id).single();
+      return userData;
+    },
     retry: false,
     enabled: !disableRoleGuard
   });
 
   useEffect(() => {
     if (!isLoading && user) {
-      const userLevel = user.access_level || 'sales_person';
+      const userLevel = user.role || 'sales_person';
       
       if (!allowedLevels.includes(userLevel)) {
         // Redirect based on role

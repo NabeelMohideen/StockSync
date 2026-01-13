@@ -7,9 +7,9 @@ export default function Cart({ items, onUpdateQuantity, onRemove, onCheckout }) 
   const total = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
 
   return (
-    <Card className="h-full flex flex-col max-h-[calc(100vh-180px)] lg:max-h-none">
+    <Card className="h-full flex flex-col max-h-[calc(100vh-180px)] lg:max-h-[calc(100vh-140px)]">
       <CardHeader className="border-b border-slate-100 flex-shrink-0">
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <ShoppingCart className="w-5 h-5" />
           Cart ({items.length})
         </CardTitle>

@@ -70,7 +70,6 @@ export default function Users() {
     mutationFn: async ({ email, role, full_name }) => {
       // For now, users need to be created via Supabase Auth dashboard or CLI
       // This is a placeholder - actual implementation would use Supabase Auth Admin API
-      console.log('User invite not yet implemented:', email, role);
       throw new Error('User invite feature requires Supabase Auth Admin API setup');
     },
     onSuccess: () => {

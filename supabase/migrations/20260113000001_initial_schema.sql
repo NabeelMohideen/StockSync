@@ -192,6 +192,8 @@ CREATE TRIGGER update_warranties_updated_at BEFORE UPDATE ON public.warranties F
 CREATE TRIGGER update_accounts_updated_at BEFORE UPDATE ON public.accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Enable Row Level Security (RLS)
+-- RLS is a critical security feature that controls data access at the database level
+-- IMPORTANT: See RLS_SECURITY.md in project root for detailed RLS policy documentation
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shops ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
@@ -203,14 +205,66 @@ ALTER TABLE public.stock_transfers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.warranties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.accounts ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies (allow authenticated users for now, can be refined later)
-CREATE POLICY "Allow authenticated users" ON public.users FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.shops FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.products FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.inventory FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.customers FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.sales FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.sale_items FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.stock_transfers FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.warranties FOR ALL TO authenticated USING (true);
-CREATE POLICY "Allow authenticated users" ON public.accounts FOR ALL TO authenticated USING (true);
+-- Create RLS policies (Development setup with public READ access)
+-- 
+-- DEVELOPMENT POLICY STRUCTURE (current):
+-- - SELECT: Public access (all users can read data)
+-- - INSERT: Authenticated only (prevents unauthorized data creation)
+-- - UPDATE: Authenticated only (prevents unauthorized modifications)
+-- - DELETE: Authenticated only (prevents unauthorized deletions)
+--
+-- PRODUCTION CONSIDERATION:
+-- Before deploying to production, tighten READ policies to restrict access by:
+-- - User role (admin, manager, sales_person, report_viewer)
+-- - Data ownership (users can only see their own records)
+-- - Shop access (users can only see their shop's data)
+-- See RLS_SECURITY.md for production policy examples.
+--
+CREATE POLICY "Allow all users to read" ON public.users FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to update" ON public.users FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.users FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.shops FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.shops FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.shops FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.shops FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.products FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.products FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.products FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.products FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.inventory FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.inventory FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.inventory FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.inventory FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.customers FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.customers FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.customers FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.customers FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.sales FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.sales FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.sales FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.sales FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.sale_items FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.sale_items FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.sale_items FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.sale_items FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.stock_transfers FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.stock_transfers FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.stock_transfers FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.stock_transfers FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.warranties FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.warranties FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.warranties FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.warranties FOR DELETE TO authenticated USING (true);
+
+CREATE POLICY "Allow all users to read" ON public.accounts FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated users to insert" ON public.accounts FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to update" ON public.accounts FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow authenticated users to delete" ON public.accounts FOR DELETE TO authenticated USING (true);

@@ -216,29 +216,27 @@ export default function POS() {
   return (
     <div className="h-screen flex flex-col bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4">
-        <div className="max-w-[2000px] mx-auto flex items-center justify-between">
+      <div className="bg-white border-b border-slate-100 px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Point of Sale</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Point of Sale</h1>
             <p className="text-sm text-slate-500 mt-1">Select shop and start selling</p>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
-              <Store className="w-5 h-5 text-slate-600" />
-              <Select value={selectedShop} onValueChange={setSelectedShop}>
-                  <SelectTrigger className="w-64 border-0 bg-transparent focus:ring-0">
-                    <SelectValue placeholder="Select Shop" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shops.filter(s => s.is_active !== false).map(shop => (
-                      <SelectItem key={shop.id} value={shop.id}>
-                        {shop.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-slate-50 rounded-xl w-full sm:w-auto">
+            <Store className="w-5 h-5 text-slate-600 flex-shrink-0" />
+            <Select value={selectedShop} onValueChange={setSelectedShop}>
+              <SelectTrigger className="border-0 bg-transparent focus:ring-0 w-full sm:w-64">
+                <SelectValue placeholder="Select Shop" />
+              </SelectTrigger>
+              <SelectContent>
+                {shops.filter(s => s.is_active !== false).map(shop => (
+                  <SelectItem key={shop.id} value={shop.id}>
+                    {shop.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -254,19 +252,19 @@ export default function POS() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full max-w-[2000px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="flex-1 overflow-hidden bg-slate-50">
+          <div className="h-full flex flex-col lg:flex-row gap-6 p-4 sm:p-6">
             {/* Products Section */}
-            <div className="lg:col-span-2 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
               {/* Search */}
-              <div className="mb-4">
+              <div className="mb-4 flex-shrink-0">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input
                     placeholder="Search products..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-12 text-base bg-white"
+                    className="pl-10 h-11 sm:h-12 text-sm sm:text-base bg-white"
                   />
                   {searchQuery && (
                     <button
@@ -280,7 +278,7 @@ export default function POS() {
               </div>
 
               {/* Products Grid */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto pr-2">
                 {getAvailableProducts().length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
@@ -291,7 +289,7 @@ export default function POS() {
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 pb-4">
                     {getAvailableProducts().map(product => (
                       <ProductCard
                         key={product.id}
@@ -306,7 +304,7 @@ export default function POS() {
             </div>
 
             {/* Cart Section */}
-            <div className="lg:col-span-1">
+            <div className="w-full lg:w-96 flex-shrink-0">
               <Cart
                 items={cartItems}
                 onUpdateQuantity={handleUpdateQuantity}

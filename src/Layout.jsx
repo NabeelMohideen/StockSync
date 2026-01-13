@@ -21,7 +21,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
-import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 
 const allNavItems = [
@@ -46,21 +45,22 @@ export default function Layout({ children, currentPageName }) {
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data: userData } = await supabase.from('users').select('*').eq('id', user.id).single();
+      return userData;
+    },
     enabled: !disableRoleGuard
   });
 
-  const userAccessLevel = currentUser?.access_level || 'sales_person';
+  const userAccessLevel = currentUser?.role || 'sales_person';
   // Show all nav items when role guard is disabled (dev mode), otherwise filter by role
   const navItems = disableRoleGuard ? allNavItems : allNavItems.filter(item => item.roles.includes(userAccessLevel));
 
   const handleLogout = async () => {
     try {
-      // Sign out from both Supabase and Base44
-      await Promise.all([
-        supabase.auth.signOut(),
-        base44.auth.logout()
-      ]);
+      await supabase.auth.signOut();
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
