@@ -220,11 +220,7 @@ Track business finances:
 - View net balance and financial summaries
 - Filter by transaction type
 
-## Development
-
-For detailed development guides, security setup, and pre-deployment checklists, see [DEVELOPMENT.md](DEVELOPMENT.md).
-
-### Authentication & Authorization
+## Authentication & Authorization
 
 The app implements complete authentication with role-based access control:
 
@@ -234,6 +230,15 @@ The app implements complete authentication with role-based access control:
 - **Session Management**: Secure session handling with Supabase Auth
 - **Test Users**: Pre-configured for immediate testing
 
+### User Roles & Access
+
+| Role | Access | Pages |
+|------|--------|-------|
+| **super_admin** | Full access | All pages |
+| **administrator** | Admin access | All pages |
+| **sales_person** | Limited access | POS only |
+| **report_viewer** | Read-only | Reports only |
+
 **Test credentials (automatically created on db reset):**
 - `superadmin@example.com` (super_admin) - Full system access
 - `manager@example.com` (administrator) - Shop and inventory management
@@ -242,7 +247,31 @@ The app implements complete authentication with role-based access control:
 
 Password: `admin123` for all test accounts
 
-**For detailed authentication guide, see [QUICK_START_AUTH.md](QUICK_START_AUTH.md)**
+### Architecture
+
+The authentication flow:
+1. **App Launch** → AuthProvider checks Supabase session
+2. **If authenticated** → Show app with role-based navigation
+3. **If NOT authenticated** → Redirect to /login page
+4. **Login Process** → Credentials sent to Supabase Auth → Session created → Redirect to Dashboard
+
+### Implementation Details
+
+**AuthProvider** (`src/lib/AuthContext.jsx`)
+- Manages global authentication state
+- Provides `useAuth()` hook for components
+- Handles login/logout/signup operations
+- Tracks session and user information
+
+**ProtectedRoute** (`src/App.jsx`)
+- Wraps all app routes (except /login)
+- Checks if user is authenticated
+- Redirects to /login if not authenticated
+
+**Layout** (`src/Layout.jsx`)
+- Displays sidebar with role-filtered navigation
+- Shows logged-in user's name and role
+- Provides logout functionality
 
 ### Project Structure
 
@@ -255,12 +284,19 @@ src/
 │   └── pos/         # POS components
 ├── hooks/           # Custom React hooks
 ├── lib/             # Utilities and configs
+│   ├── AuthContext.jsx     # Authentication provider
+│   ├── NavigationTracker.jsx
+│   └── PageNotFound.jsx
 ├── pages/           # Page components
 └── utils/           # Helper functions
 
 supabase/
 ├── migrations/      # Database migrations
-└── seed.sql        # Sample data
+├── config.toml      # Supabase local config
+├── seed.sql         # Essential data
+├── seed-dummy.sql   # Full test data
+├── create-users.sh  # Linux/Mac user creation
+└── create-users.bat # Windows user creation
 ```
 
 ### Available Scripts
@@ -297,7 +333,46 @@ VITE_DISABLE_ROLE_GUARD=false
 
 **Note**: The `.env` file is already configured. Only modify if you're using a different Supabase instance.
 
-## Deployment
+## Development & Deployment
+
+### Security & RLS Policies
+
+Row Level Security (RLS) is configured at the database level to control data access:
+
+**Current Development Setup:**
+- **SELECT (READ)**: Public - All users can read data
+- **INSERT**: Authenticated only - Prevents unauthorized data creation
+- **UPDATE**: Authenticated only - Prevents unauthorized modifications
+- **DELETE**: Authenticated only - Prevents unauthorized deletions
+
+⚠️ **Before Deploying to Production:**
+1. Tighten READ policies to restrict by user role, shop ownership, or data ownership
+2. Implement role-based access control (RBAC) at database level
+3. Add audit logging to track all changes
+4. Test thoroughly with different user roles
+
+**Example: Role-based READ access**
+```sql
+CREATE POLICY "Users can view their shop data" 
+ON public.products 
+FOR SELECT 
+USING (auth.jwt() ->> 'user_id' IN (
+  SELECT user_id FROM user_shops WHERE shop_id = products.shop_id
+));
+```
+
+See [supabase/migrations/20260113000001_initial_schema.sql](supabase/migrations/20260113000001_initial_schema.sql) for current RLS policies.
+
+### Pre-Deployment Checklist
+
+- [ ] All features tested locally
+- [ ] No console errors or warnings
+- [ ] Performance acceptable (load times, render times)
+- [ ] Mobile responsiveness verified
+- [ ] Accessibility tested (keyboard navigation, screen readers)
+- [ ] RLS policies reviewed and tightened for production
+- [ ] Environment variables configured for production
+- [ ] All API endpoints working correctly
 
 ### Build for Production
 
@@ -317,9 +392,9 @@ Output will be in `dist/` directory.
 ### Supabase Production
 
 1. Create project at [supabase.com](https://supabase.com)
-2. Run migrations: `npx supabase db push`
+2. Run migrations: `npx supabase db push --linked`
 3. Update environment variables with production credentials
-4. Set up Row Level Security (RLS) policies as needed
+4. Configure Row Level Security policies
 
 ## Troubleshooting
 
