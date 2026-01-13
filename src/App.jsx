@@ -61,7 +61,7 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors - just show error component
-  if (authError && authError.type === 'user_not_registered') {
+  if (authError && typeof authError === 'object' && authError.type === 'user_not_registered') {
     return <UserNotRegisteredError />;
   }
 

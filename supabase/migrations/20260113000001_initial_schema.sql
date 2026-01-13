@@ -191,10 +191,6 @@ CREATE TRIGGER update_stock_transfers_updated_at BEFORE UPDATE ON public.stock_t
 CREATE TRIGGER update_warranties_updated_at BEFORE UPDATE ON public.warranties FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_accounts_updated_at BEFORE UPDATE ON public.accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Enable Row Level Security (RLS)
--- RLS is a critical security feature that controls data access at the database level
--- IMPORTANT: See RLS_SECURITY.md in project root for detailed RLS policy documentation
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shops ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory ENABLE ROW LEVEL SECURITY;
@@ -218,12 +214,6 @@ ALTER TABLE public.accounts ENABLE ROW LEVEL SECURITY;
 -- - User role (admin, manager, sales_person, report_viewer)
 -- - Data ownership (users can only see their own records)
 -- - Shop access (users can only see their shop's data)
--- See RLS_SECURITY.md for production policy examples.
---
-CREATE POLICY "Allow all users to read" ON public.users FOR SELECT USING (true);
-CREATE POLICY "Allow authenticated users to update" ON public.users FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Allow authenticated users to delete" ON public.users FOR DELETE TO authenticated USING (true);
-
 CREATE POLICY "Allow all users to read" ON public.shops FOR SELECT USING (true);
 CREATE POLICY "Allow authenticated users to insert" ON public.shops FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Allow authenticated users to update" ON public.shops FOR UPDATE TO authenticated USING (true) WITH CHECK (true);

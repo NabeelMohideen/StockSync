@@ -206,6 +206,26 @@ Track business finances:
 
 For detailed development guides, security setup, and pre-deployment checklists, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
+### Authentication & Authorization
+
+The app implements complete authentication with role-based access control:
+
+- **Login Required**: Users must login to access the app
+- **4 User Roles**: Super Admin, Administrator, Sales Person, Report Viewer
+- **Role-Based Navigation**: Menu items filtered by user role
+- **Session Management**: Secure session handling with Supabase Auth
+- **Test Users**: Demo accounts included for testing
+
+**For complete authentication guide and role details, see [AUTHENTICATION.md](AUTHENTICATION.md)**
+
+Test users available:
+- `superadmin@example.com` (super_admin) - Full access
+- `manager@example.com` (administrator) - Admin access
+- `salesperson@example.com` (sales_person) - POS only
+- `viewer@example.com` (report_viewer) - Reports only
+
+Password: `admin123` for all test accounts
+
 ### Project Structure
 
 ```

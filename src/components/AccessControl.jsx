@@ -28,7 +28,7 @@ export default function AccessControl({ children, allowedLevels }) {
 
   useEffect(() => {
     if (!isLoading && user) {
-      const userLevel = user.role || 'sales_person';
+      const userLevel = user.access_level || 'sales_person';
       
       if (!allowedLevels.includes(userLevel)) {
         // Redirect based on role

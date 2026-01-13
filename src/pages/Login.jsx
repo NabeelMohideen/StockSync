@@ -8,7 +8,7 @@ import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('admin@stocksync.com');
+  const [email, setEmail] = useState('superadmin@example.com');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -134,7 +134,7 @@ export default function Login() {
             <p className="text-xs text-slate-500 text-center mb-3">Demo Credentials</p>
             <div className="bg-slate-50 rounded-lg p-3 space-y-1">
               <p className="text-sm text-slate-600">
-                <span className="font-medium">Email:</span> admin@stocksync.com
+                <span className="font-medium">Email:</span> superadmin@example.com
               </p>
               <p className="text-sm text-slate-600">
                 <span className="font-medium">Password:</span> admin123

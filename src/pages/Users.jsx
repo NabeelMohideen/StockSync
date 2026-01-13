@@ -280,7 +280,7 @@ export default function Users() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="capitalize">
-                            {user.role || 'user'}
+                            {user.access_level || 'user'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">

@@ -54,7 +54,7 @@ export default function Layout({ children, currentPageName }) {
     enabled: !disableRoleGuard
   });
 
-  const userAccessLevel = currentUser?.role || 'sales_person';
+  const userAccessLevel = currentUser?.access_level || 'sales_person';
   // Show all nav items when role guard is disabled (dev mode), otherwise filter by role
   const navItems = disableRoleGuard ? allNavItems : allNavItems.filter(item => item.roles.includes(userAccessLevel));
 
