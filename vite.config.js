@@ -5,9 +5,10 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 8000,
     open: false,
+    strictPort: false,
   },
   resolve: {
     alias: {

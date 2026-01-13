@@ -83,6 +83,63 @@ npm run dev
 
 Visit `http://localhost:8000`
 
+## Network Access (Multi-Device Development)
+
+Access your development app from other devices on your network:
+
+### Quick Start
+
+1. **Find your machine IP:**
+   ```bash
+   # Windows: Run in Command Prompt
+   ipconfig
+   # Look for "IPv4 Address" (e.g., 192.168.1.100)
+   
+   # Mac/Linux: Run in Terminal
+   ifconfig
+   # Look for "inet " that's not 127.0.0.1
+   ```
+
+2. **Start dev server:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Access from another device:**
+   ```
+   http://YOUR_MACHINE_IP:8000
+   # Example: http://192.168.1.100:8000
+   ```
+
+The app will **automatically detect network access** and connect to the database.
+
+### How It Works
+
+- **Local access** (localhost) → Uses `http://localhost:54321`
+- **Network access** (192.168.x.x) → Auto-switches to `http://192.168.x.x:54321`
+
+### Troubleshooting Network Access
+
+**Can't connect from another device?**
+
+1. Check firewall allows ports 8000 and 54321:
+   ```bash
+   # Windows Firewall
+   netsh advfirewall firewall add rule name="StockSync Dev" dir=in action=allow protocol=tcp localport=8000,54321
+   ```
+
+2. Verify Supabase is running:
+   ```bash
+   npx supabase status
+   ```
+
+3. Test network connectivity:
+   ```bash
+   ping 192.168.1.100  # Replace with your IP
+   ```
+
+4. Clear browser cache on the network device and try again
+
 ## Database Schema
 
 ### Core Tables
@@ -146,6 +203,8 @@ Track business finances:
 - Filter by transaction type
 
 ## Development
+
+For detailed development guides, security setup, and pre-deployment checklists, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ### Project Structure
 
@@ -267,7 +326,7 @@ MIT License - feel free to use this project for personal or commercial purposes.
 
 For issues and questions:
 - Create an issue in the repository
-- Check existing documentation
+- Check existing documentation in [DEVELOPMENT.md](DEVELOPMENT.md)
 - Review Supabase logs: `npx supabase logs`
 
 ## Roadmap

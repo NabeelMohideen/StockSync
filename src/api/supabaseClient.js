@@ -1,7 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Auto-adjust Supabase URL for network access
+// If accessing from localhost, use localhost:54321
+// If accessing from network IP, replace localhost with the host's IP
+if (supabaseUrl && supabaseUrl.includes('localhost')) {
+  const currentHost = window.location.hostname;
+  if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+    // Replace localhost with the current host IP
+    supabaseUrl = supabaseUrl.replace('localhost', currentHost);
+    console.log('Supabase URL auto-adjusted for network access:', supabaseUrl);
+  }
+}
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in .env');
